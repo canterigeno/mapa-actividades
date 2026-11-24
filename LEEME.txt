@@ -1,0 +1,71 @@
+E-056 — MAPA DE ACTIVIDADES — PWA v1 + KML (2026-11-24 04:35, tarea Cola de encargos)
+NADA PUBLICADO NI COMPARTIDO: falta el OK de Rafael.
+
+CONTENIDO
+pwa/  Web instalable (PWA): index.html, app.js, sw.js (funciona sin cobertura), manifest.webmanifest, iconos,
+      vendor/ (Leaflet 1.9.4 y markercluster 1.5.3 copiados dentro para que funcione sin red) y datos.json
+      (tabla v2: 2.067 barrancos, 138 ferratas, 3.432 pernocta; cuevas: 0, Overpass caído).
+kml/  5 capas para Google My Maps (cada una < 2.000 puntos, límite de My Maps): barrancos I–II, barrancos III–VI,
+      ferratas, campings, áreas AC + naturales. Colores de Rafael; ficha con zona, grado, fuente, caudales y «cómo llegar».
+      Importar: My Maps › Crear mapa › Añadir capa › Importar › elegir el .kml (una capa por archivo; máx. 10 capas).
+
+QUÉ HACE LA PWA v1
+- Filtros: tipo; compromiso I–VI; V máx., A máx.; retorno (inmediato, <5, <15, <30, <60 min); aproximación y descenso
+  máximos; sin combinación de coches; «incluir los que aún no tienen el dato»; K1–K6/sin K; pernocta AC/camping/natural
+  y gratis/pago/sin dato; buscador por nombre o zona; «Dónde estoy»; ficha con enlace y «Cómo llegar» (al parking si existe).
+- Sin cobertura: guarda la app y los puntos al abrirla; el mapa base se guarda solo según se mira y con el botón
+  «Guardar zona sin cobertura» (máx. 400 teselas por zona, zoom hasta 15, por la política de uso de las teselas de OSM).
+  Fase siguiente: mapa base propio de España en un solo archivo (PMTiles) para tenerlo entero sin cobertura.
+- Instalar: botón «Instalar» (Android/Chrome) o «Compartir › Añadir a pantalla de inicio» (iPhone/Safari).
+- DATOS EN UN SOLO SITIO: la app lee datos.json o la URL que se le pase con ?datos=<url>. Sirve el CSV de la Google
+  Sheet «publicada en la web como CSV» (Archivo › Compartir › Publicar en la web › CSV) con la misma cabecera que la tabla v2:
+  Rafael edita la hoja y todos ven el cambio al abrir la app con conexión.
+- Probado en Chromium (2026-11-24): sin errores; 2.205 puntos por defecto, 5.637 con pernocta, quitar K4 resta 23,
+  «Huesca» 275; service worker activo; recargando SIN conexión sigue mostrando los 2.205 puntos.
+
+PARA PONERLA EN MARCHA (necesita OK de Rafael; nada hecho):
+ 1) Alojar la carpeta pwa/ en una web HTTPS gratuita de su cuenta (p. ej. GitHub Pages, donde ya está la APK de la SV08;
+    repositorio privado no sirve en el plan gratis → repositorio público o Netlify/Cloudflare Pages con enlace no listado).
+ 2) Publicar la Google Sheet como CSV (o seguir con datos.json) y abrir la app con ?datos=<url del CSV>.
+ 3) Compartir el enlace con quien él quiera (solo lectura).
+LICENCIAS: barrancos de Infobarrancos.es (punto básico + enlace a la reseña); ferratas y pernocta © colaboradores de
+OpenStreetMap (ODbL, hay que citarlo; está en la app). Park4Night/Furgoperfectos no se han copiado (sus condiciones lo prohíben).
+
+2026-11-24 13:23 — v1.8: datos tabla v9 con parking OSM aproximado en 1.206 de 2.206 barrancos/ferratas (antes 487). Cachés app-v5 / datos-v2.
+
+== v1.11 (2026-11-24 18:35, tarea Cola de encargos) — DESCENTE-CANYON EN FRANCIA, PORTUGAL Y ANDORRA (tabla v12) ==
+Los 230 barrancos de Infobarrancos fuera de España (Francia 164, Portugal 49, Andorra 17) se han cruzado con las listas de
+Descente-Canyon.com de Francia (lieu/01), Portugal (lieu/016) y Andorra (lieu/019) (base de canyons bajo CC BY-NC-SA: uso
+personal no comercial, citando la fuente; enlace a cada ficha en «Notas»). Coordenadas de la página de mapa de cada país;
+parking de la página de mapa de cada ficha unida. Unión: nombre normalizado + distancia (≤2,5 km con nombre muy parecido,
+≤800 m con nombre medio parecido); se RECHAZA si los tramos chocan (sup/amont frente a inf/aval) y, si dos fichas de
+Infobarrancos caen en la misma de Descente-Canyon, solo se une la más cercana (Arado sup. y Frades sup. quedan sin unir).
+Resultado: 129 barrancos unidos (Francia 113, Portugal 11, Andorra 5; 2 ya lo estaban): 117 con V/A y compromiso (el color pasa
+a ir por ese compromiso; si la dificultad de Infobarrancos era distinta queda en Notas), 119 con aproximación y retorno, 116 con
+descenso, 118 con combinación de coches, 33 con PARKING de Descente-Canyon (sustituye al aproximado de OSM), 7 marcados allí
+como PROHIBIDOS (columna restricciones y nota). No se añaden barrancos nuevos de fuera de España.
+Uniones con posible tramo distinto (revisar): Canyon Rio Arado Inferior ↔ Arado; Canyon du Tech ↔ Tech (supérieur); Canyon du Muscadet ↔ Muscadet (aval); Canyon d Estats Inferieur ↔ Estats; Río Frades Inferior ↔ Frades; Gorges du Maudan Inf ↔ Maudan; Ruisseau de Coume Sup e Inf ↔ Coume (supérieur); Ruisseau de Calahoure Sup e Inf ↔ Calahoure (supérieur); Gorge de Zitziratzé ↔ Zitziratzé (inférieur).
+Tabla v12 = 14.976 puntos (2.116 barrancos, 139 ferratas, 9.289 cuevas, 3.432 pernocta). KML 1 (I–II, 1.310) y 2 (III–VI y sin
+dato, 806) regenerados con el mismo generador (reproduce idénticos los de la v1.10). PWA: solo datos, versión y cachés app-v8/datos-v5.
+NADA PUBLICADO.
+
+2026-11-24 19:27 — v1.12 (tarea Cola de encargos) — CORRECCIÓN DE RAFAEL: PARKINGS DE OPENSTREETMAP QUITADOS (no fiables).
+- Tabla v13: los 1.109 parkings OSM (992 barrancos + 117 ferratas) se quitan de plat/plon/pnota; se guardan OCULTOS en la columna nueva «posm» («OSM, NO FIABLE»). Columna nueva «pfu» = origen del parking.
+- Quedan solo parkings con punto propio de su fuente: 160 barrancos con parking de Descente-Canyon (puesto por usuarios); en pernocta, el propio punto.
+- Mapa de origen de Infobarrancos (My Maps de Rafael, KML completo revisado: 2.074 puntos): UNA sola capa «Barrancos», sin puntos de parking, inicio ni salida → no aporta parkings.
+- Wikiloc: su web corta el acceso automático (comprobación anti-robots de Cloudflare); no se extrae nada. En cada barranco y ferrata la ficha trae «Buscar en Wikiloc» (búsqueda por nombre y provincia).
+- PWA: ficha con «Parking: sin parking verificado» cuando no hay, «Origen del parking», enlace «Ficha del parking» y «Buscar en Wikiloc». Cachés app-v9 / datos-v6. Probada en Chromium: 14.976 puntos, 160 con parking, sin errores.
+- KML 1, 2 y 3: quitado el parking OSM en 1.109 fichas («Cómo llegar» va al punto); los de Descente-Canyon dicen su origen. KML validados.
+- Plan B de parkings (propuesto a Rafael en INFORMES): otras fuentes con parking en la reseña y licencia que lo permita; GPX de Wikiloc bajado por Rafael con su cuenta; pedir a Wikiloc acceso oficial; botón en la web para que Rafael marque o corrija el parking.
+
+2026-11-24 20:30 — v1.13 (tarea Cola de encargos) — MAPA BASE DE ESPAÑA SIN COBERTURA (PMTiles propio).
+- Archivo pwa/mapa-base/espana.pmtiles (30.480.372 bytes, SHA-256 f391fca8e66e266f579ff8f20e2e3c90511d63d30b21bd22f04632960b16d95c): mapa vectorial de España peninsular, Baleares, Canarias, Ceuta y Melilla (más el sur de Francia, Andorra, Portugal y el norte de Marruecos que caen en el recuadro), zoom 0–9 (carreteras principales y secundarias, pueblos y ciudades con nombre, ríos, embalses, mar, bosques y zonas verdes). Datos © colaboradores de OpenStreetMap (ODbL), recorte propio de la compilación diaria de Protomaps del 2026-11-23 (build.protomaps.com/20261123.pmtiles) por peticiones de rango; también se generó una versión hasta zoom 10 (73,7 MB), descartada por tamaño.
+- POR TAMAÑO NO VA EN EL ZIP: está en la misma carpeta de Drive como «E-056 — Mapa base España sin cobertura z0-9 (espana.pmtiles, 2026-11-24).pmtiles» (30.480.372 bytes, SHA-256 f391fca8…d95c; guardado por G:). Al publicar, copiarlo como pwa/mapa-base/espana.pmtiles (el servidor tiene que admitir peticiones por rangos; GitHub Pages y Netlify las admiten). Se puede regenerar con «E-056 — Script mapa base PMTiles (2026-11-24 20-30).txt». Sin ese archivo la app funciona igual que la v1.12 y el botón avisa de que no se ha podido descargar.
+- PWA: botón «🗺 Mapa base de España sin cobertura» que lo descarga UNA vez (≈30 MB, mejor con wifi) a la caché «mapabase-v1»; selector de capas (arriba a la derecha) «OpenStreetMap (con cobertura)» / «España sin cobertura (propio)». Sin conexión, si está guardado, la app cambia sola al mapa propio y al volver la cobertura vuelve a OpenStreetMap (salvo que se haya elegido a mano). Por encima del zoom 9 se amplía el dibujo; para el detalle de una zona sigue «Guardar zona sin cobertura» (teselas OSM hasta zoom 15). El service worker sirve el archivo guardado por rangos (206). Dibujo con protomaps-leaflet 5.0.1 (licencia BSD, en vendor/), estilo claro u oscuro según el móvil, nombres en español.
+- Cachés app-v10 / datos-v6 / mapabase-v1. Probada en Chromium: 11.532 puntos visibles por defecto, descarga del mapa base, recarga SIN conexión → mapa propio dibujado (España entera y Guara a zoom 11), sin errores de la app.
+- Datos (tabla v13) y KML sin cambios.
+
+2026-11-24 20:35 — v1.14 (tarea Cola de encargos) — MARCAR / CORREGIR PARKING A MANO (decisión d de Rafael).
+- En la ficha de cada barranco y ferrata: «📍 Marcar / corregir parking» → se toca el mapa donde se aparca → queda como parking de ese punto («Marcado a mano el AAAA-MM-DD», origen «Marcado a mano en la web (Rafael)»), con «Cómo llegar (parking)» hacia él; «Quitar mi parking» vuelve al dato original.
+- Se guarda en ESTE navegador (localStorage «e056-parkings-v1»). Para que llegue A TODOS: botón «⬇ Exportar mis parkings (CSV)» (id, nombre, parking_lat, parking_lon, parking_fuente, fecha) y pegar esas columnas en la tabla online (Google Sheet publicada como CSV, la que lee ?datos=). Guardado automático para todos necesitaría un servidor o un formulario: se hará al publicar (propuesta: Google Form → la misma hoja).
+- Caché app-v11. Probada en Chromium: marcar, recargar (se conserva), exportar CSV, quitar; mapa base sin cobertura sigue bien; sin errores de la app.
