@@ -69,3 +69,49 @@ NADA PUBLICADO.
 - En la ficha de cada barranco y ferrata: «📍 Marcar / corregir parking» → se toca el mapa donde se aparca → queda como parking de ese punto («Marcado a mano el AAAA-MM-DD», origen «Marcado a mano en la web (Rafael)»), con «Cómo llegar (parking)» hacia él; «Quitar mi parking» vuelve al dato original.
 - Se guarda en ESTE navegador (localStorage «e056-parkings-v1»). Para que llegue A TODOS: botón «⬇ Exportar mis parkings (CSV)» (id, nombre, parking_lat, parking_lon, parking_fuente, fecha) y pegar esas columnas en la tabla online (Google Sheet publicada como CSV, la que lee ?datos=). Guardado automático para todos necesitaría un servidor o un formulario: se hará al publicar (propuesta: Google Form → la misma hoja).
 - Caché app-v11. Probada en Chromium: marcar, recargar (se conserva), exportar CSV, quitar; mapa base sin cobertura sigue bien; sin errores de la app.
+
+
+--- 2026-11-25 00:52 (Madrid) — tarea Cola de encargos — v1.17 (tabla v15) — E-063, E-062 (puntos 1 y 2) y E-064 ---
+E-063 TOPOGRAFÍAS DE CUEVAS (solo ENLACES, nada copiado):
+- Fuente principal Espeleoclub Viana (clubviana.org; robots.txt lo permite; su aviso legal permite usar citando el origen):
+  leídas sus 20 páginas de cavidades por comunidad/provincia (~1 petición/s): 180 cavidades con topografía y/o track.
+- Columnas nuevas «topo» y «acceso» (formato «fuente|texto|url ‖ …», Viana primero; las demás fuentes se añadirán detrás,
+  de la más popular a la menos). Los enlaces abren el archivo en el visor de Google Drive del club (no se descarga ni se copia).
+- Cruce con la tabla: con el FINAL de su track de acceso (GPX leído solo para sacar el punto) y el nombre: 89 unidas por
+  posición + nombre, 14 por nombre; 49 cavidades NUEVAS (C-VI-0001…, punto = final del track, «comprobar»); 27 sin ubicar
+  (sin track y sin nombre que case: listadas en INFORMES). 128 cuevas con «Parking / inicio a pie» = inicio del track de Viana.
+- Ficha de cueva: «📐 Topografía (fuente)» y «🥾 Acceso / GPX»; filtro nuevo «Cuevas: solo las que tienen topografía» (118).
+- Otras fuentes: Cuevas de Castellón (UJI) pide usuario → fuera. Pendiente: Club Abismo, FCMEC/FME, catálogos autonómicos.
+E-062 PERNOCTA:
+- 1) OSM ampliado: aparcamientos con motorhome/caravans/camper=yes|designated u overnight=yes en España (Overpass, 30 de 32
+  cuadrículas; las 2 que fallan son casi todo Portugal/mar): 81 → 43 nuevos (15 repetidos, 4 privados, el resto fuera de
+  España) como «área de autocaravanas (aparcamiento apto, OSM)», con aviso «pernocta NO confirmada». Park4Night,
+  Furgoperfectos, Campercontact y Áreas AC: NO copiados (condiciones); borradores de correo para pedir permiso en Drive.
+  Caramaps bloquea expresamente a los robots de IA → fuera.
+- 2) Icono de FURGONETA coloreado por CALIDAD (criterio PROPUESTO, falta el OK de Rafael): 1 punto por agua, vaciado,
+  electricidad y aseos según la fuente + 1 si es gratis → 4–5 verde, 3 azul, 2 rojo, 1 morado, 0 negro. Hoy: 0→1.857
+  (casi todos por falta de datos en OSM), 1→456, 2→577, 3→381, 4→157, 5→4. La ficha muestra «Calidad (propuesta) x/5».
+E-064 ACTUALIZACIÓN MENSUAL: herramientas/actualizar_mensual.py (ver su cabecera). Columna nueva «oculto»: la PWA no pinta
+  las filas con motivo; columna «fija» para filas que Rafael no quiere que se toquen.
+Cachés app-v14/datos-v9. Probada en Chromium (escritorio y 390 px): sin errores. KML sin cambios.
+
+--- 2026-11-25 01:50 (Madrid) — tarea Cola de encargos — v1.18 (tabla v16) — E-063 parte 2 + AÑADIDO «todas las topos» ---
+E-063 PARTE 2: MÁS FUENTES DE TOPOGRAFÍAS (solo ENLACES, nada copiado):
+- Matienzo Caves Project (matienzocaves.org.uk, Cantabria: Matienzo, Ruesga, Soba, Arredondo, Voto, Solórzano…): sin robots.txt
+  (no prohíbe); índice alfabético → 933 cavidades con topografía (PDF o imagen); de su ficha se leen SOLO las coordenadas
+  (UTM 30T ETRS89 → lat/lon), altitud, desarrollo y profundidad; 930 con coordenadas (3 sin coordenadas, no usadas).
+  Cruce con las cuevas ya en la tabla: mismo nombre (sin «Sistema …» de OSM, números distintos = cuevas distintas) a ≤300 m,
+  o nombre medio parecido a ≤150 m: 51 unidas (sobre todo C-OSM); 879 NUEVAS (C-MZ-0001…; nombre en
+  español «Cueva del X»; las que la fuente llama solo «cave/shaft/dig» salen como «Cavidad NNNN (Matienzo, cueva/pozo/excavación)»).
+  Enlaces: «Topografía NNNN» (al PDF/imagen) en topo y «Ficha y situación (inglés)» en acceso. Comprobados los 930 enlaces
+  de topografía: 913 responden; 17 dan 404 en su web (índice desfasado) → en esos la topo apunta a su ficha.
+- Grupo de Espeleología Comando (G.E.C., uv.es/~rzaragoz; robots.txt de uv.es lo permite): trabajo de zona de Barx (Valencia),
+  7 PDF con coordenadas ETRS89 (sector Alt del Sespar, AS 1–7) → 7 cavidades nuevas C-GEC-0001…0007 con enlace a su PDF.
+  Los PDF de los sectores Chuglars y Pla de Triola no traen coordenadas en texto → no ubicados.
+- Revisadas sin resultado: Club Abismo (no se encuentra web con catálogo), FCMEC/FME (sin catálogo público de topos),
+  Cuevas de Castellón UJI (pide usuario), catálogos autonómicos (visores sin topos descargables).
+AÑADIDO DE RAFAEL: TODAS las topos de cada cueva aunque se repitan (varias fuentes = varios enlaces), en el orden:
+  Espeleoclub Viana → Matienzo Caves Project → G.E.C. (de la más popular a la menos). La ficha dice «Topografías (N, por fuente)».
+Resultado: 10224 cuevas; 1049 con topografía (42 con más de un enlace de topo); total 17378 filas.
+App v1.18: solo textos de la ficha/leyenda, versión y cachés app-v15/datos-v10. KML SIN CAMBIOS (las C-MZ/C-GEC nuevas no
+están en los KML de cuevas: la capa 6 pasaría de 2.000 puntos; se rehará al reorganizar los KML).
