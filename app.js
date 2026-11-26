@@ -1,4 +1,7 @@
-// Mapa de actividades v1.39 (2026-11-25 21:27, E-056: solo datos, tabla v37 — campings del registro de alojamientos turísticos de la Comunidad de Madrid). Antes: Mapa de actividades v1.38 (2026-11-25 20:27, E-056: solo datos, tabla v36 — campings del registro de turismo de Galicia, REAT). Antes: Mapa de actividades v1.37 (2026-11-25 19:30, E-056: solo datos, tabla v35 — campings del registro de la Región de Murcia). Antes: Mapa de actividades v1.36 (2026-11-25 18:30, E-067: solo datos, tabla v34 — PRUG de Picos en Cantabria, Decreto 57/2026, y 25 topografías de Wikimedia Commons). Antes: Mapa de actividades v1.35 (2026-11-25 17:45, E-067: solo datos, tabla v33 — Catálogo Andaluz de Cavidades 2000, FAE/REDIAM, CC BY 4.0). Antes: Mapa de actividades v1.34 (2026-11-25 16:35, E-067: solo datos, tabla v32 — Karsteau (FFS) y PRUG de Picos en Castilla y León). Antes: Mapa de actividades v1.33 (2026-11-25 15:28, E-067: solo datos, tabla v31 — normativa del P.N. de los Picos de Europa, PRUG Decreto 21/2026 de Asturias). Antes: Mapa de actividades v1.32 (2026-11-25 14:36, E-067: solo datos, tabla v30 — Catálogo de Cuevas de la Comunitat Valenciana, GVA CC BY; nota del Decreto 65/2006).
+// Mapa de actividades v1.43 (2026-11-26, E-072: solo datos — +46 puntos de servicio GRATIS de OpenStreetMap para autocaravanas/furgonetas (vaciado y a veces agua; pernocta no confirmada), tabla v41; código igual que la v1.42).
+// Mapa de actividades v1.42 (2026-11-26, E-056: solo datos — campings de los registros oficiales de Mallorca y Menorca, tabla v40; código igual que la v1.41).
+// Mapa de actividades v1.41 (2026-11-26, E-070: ENLACES DE LAS FUENTES ARRIBA en cada ficha, como botones cortos con nombre (Infobarrancos, Descente-Canyon, OpenCanyon, Karsteau, Viana, Wikiloc…); en barrancos de Infobarrancos, botón «Wikiloc» el primero (directo si el mapa lo trae; si no, a la ficha de Infobarrancos, que no se puede leer automáticamente); tabla v39: ~338 simas de Wikidata sin datos VISIBLES).
+// Mapa de actividades v1.40 (2026-11-26, E-069: botón «Solo pernocta gratis» de un toque; Wikiloc de Infobarrancos primero en la ficha; E-066: cuevas de Wikidata con el criterio de Rafael y Karsteau del Pirineo francés; tabla v38). Antes: Mapa de actividades v1.39 (2026-11-25 21:27, E-056: solo datos, tabla v37 — campings del registro de alojamientos turísticos de la Comunidad de Madrid). Antes: Mapa de actividades v1.38 (2026-11-25 20:27, E-056: solo datos, tabla v36 — campings del registro de turismo de Galicia, REAT). Antes: Mapa de actividades v1.37 (2026-11-25 19:30, E-056: solo datos, tabla v35 — campings del registro de la Región de Murcia). Antes: Mapa de actividades v1.36 (2026-11-25 18:30, E-067: solo datos, tabla v34 — PRUG de Picos en Cantabria, Decreto 57/2026, y 25 topografías de Wikimedia Commons). Antes: Mapa de actividades v1.35 (2026-11-25 17:45, E-067: solo datos, tabla v33 — Catálogo Andaluz de Cavidades 2000, FAE/REDIAM, CC BY 4.0). Antes: Mapa de actividades v1.34 (2026-11-25 16:35, E-067: solo datos, tabla v32 — Karsteau (FFS) y PRUG de Picos en Castilla y León). Antes: Mapa de actividades v1.33 (2026-11-25 15:28, E-067: solo datos, tabla v31 — normativa del P.N. de los Picos de Europa, PRUG Decreto 21/2026 de Asturias). Antes: Mapa de actividades v1.32 (2026-11-25 14:36, E-067: solo datos, tabla v30 — Catálogo de Cuevas de la Comunitat Valenciana, GVA CC BY; nota del Decreto 65/2006).
 // Mapa de actividades v1.31 (2026-11-25 14:30, E-067: solo datos, tabla v29 — normativa del P.N. de Ordesa y Monte Perdido como restricciones).
 // Mapa de actividades v1.30 (2026-11-25 13:25, E-067: solo datos, tabla v28 — lista oficial completa de Tenerife: resolución del Cabildo E2024003725).
 // Mapa de actividades v1.29 (2026-11-25 12:26, E-067: solo datos, tabla v27 — normativa oficial como restricciones: Guara, Torrent de Pareis y Tenerife).
@@ -118,12 +121,53 @@ function ficha(p) {
     p.t === 'p' ? ['Pago', {g:'Gratis', p:'De pago', '?':'Sin dato'}[p.pg]] : null,
     p.t === 'p' ? ['Calidad', ['0/5 negro', '1/5 morado', '2/5 rojo', '3/5 azul', '4/5 verde', '5/5 verde'][calidad(p)] + ' — servicios + gratis'] : null,
     p.t === 'p' && p.pn ? ['Parking', p.pn.replace(/\s*https?:\/\/\S+$/, '')] : null, p.ep ? ['Época', p.ep] : null, p.de ? ['Nota', p.de] : null].filter(Boolean);
-  const urls = String(p.url).split(/\s*;\s*/).filter(Boolean).map((u, i) => `<a href="${esc(u)}" target="_blank" rel="noopener">${i ? 'Otra fuente' : 'Fuente / reseña'}</a>`).join(' · ');
-  return `<div class="pop"><b>${esc(p.n || '(sin nombre)')}</b><table>${R.map(r => `<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td></tr>`).join('')}</table>${fichaEnlaces(p)}${p.t === 'b' || p.t === 'f' || p.t === 'r' || p.t === 'c' ? fichaParkings(p) : ''}${urls}
-  ${p.cau ? ` · <a href="${esc(p.cau)}" target="_blank" rel="noopener">Caudales</a>` : ''}
-  ${p.t === 'b' || p.t === 'f' ? ` · <a href="https://www.google.com/search?q=${encodeURIComponent('site:wikiloc.com ' + (p.n || '') + ' ' + (p.pr || ''))}" target="_blank" rel="noopener">Buscar en Wikiloc</a>` : ''}
+  const urls = '<small>Enlaces de las fuentes: arriba</small>';
+  return `<div class="pop"><b>${esc(p.n || '(sin nombre)')}</b>${fichaFuentes(p)}<table>${R.map(r => `<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td></tr>`).join('')}</table>${fichaEnlaces(p)}${p.t === 'b' || p.t === 'f' || p.t === 'r' || p.t === 'c' ? fichaParkings(p) : ''}${urls}
+  
+  ${p.t === 'b' || p.t === 'f' ? ` · <a href="https://www.google.com/search?q=${encodeURIComponent('site:wikiloc.com ' + (p.n || '') + ' ' + (p.pr || ''))}" target="_blank" rel="noopener">${wikilocs(p).length ? 'Otras rutas en Wikiloc' : 'Buscar en Wikiloc'}</a>` : ''}
   ${p.t === 'b' || p.t === 'f' || p.t === 'r' ? '' : ` · <a href="https://www.google.com/maps/dir/?api=1&destination=${p.la},${p.lo}" target="_blank" rel="noopener">Cómo llegar</a>`}
   · <a href="#" onclick="alrededor(${p.la},${p.lo},'${esc(p.n || 'este punto').replace(/'/g, '')}');return false">Buscar alrededor</a></div>`;
+}
+
+// ---------- E-070: enlaces de TODAS las fuentes, arriba y en primer plano, como botones cortos con nombre ----------
+const FU_NOM = [[/infobarrancos/i, 'Infobarrancos'], [/descente-canyon/i, 'Descente-Canyon'], [/opencanyon/i, 'OpenCanyon'], [/wikiloc/i, 'Wikiloc'],
+  [/karsteau/i, 'Karsteau'], [/karstexplo/i, 'Karstexplo'], [/matienzocaves/i, 'Matienzo'], [/clubviana|espeleoclubviana/i, 'Espeleoclub Viana'],
+  [/navarra\.es/i, 'IDENA Navarra'], [/rediam|juntadeandalucia/i, 'Junta de Andalucía'], [/wikidata/i, 'Wikidata'], [/wikipedia/i, 'Wikipedia'],
+  [/commons\.wikimedia/i, 'Wikimedia Commons'], [/camptocamp/i, 'Camptocamp'], [/openstreetmap/i, 'OpenStreetMap'], [/google\.com\/maps\/d\//i, 'Mapa de origen (My Maps)'],
+  [/drive\.google/i, 'Drive'], [/visor\.gva|dogv\.gva/i, 'Generalitat Valenciana'], [/feec\.cat/i, 'FEEC'], [/tenerifeon|tenerife\.es/i, 'Cabildo de Tenerife'],
+  [/saih|chtajo|chebro/i, 'Caudales (SAIH)'], [/xunta|turismo\.gal/i, 'Xunta / Turismo de Galicia'], [/aragon\.es/i, 'Gobierno de Aragón'], [/campaments\.cat|catalunya\.com/i, 'Turisme de Catalunya']];
+function fuNombre(u) { for (const [re, n] of FU_NOM) if (re.test(u)) return n;
+  try { const h = new URL(u).hostname.replace(/^www\./, '').split('.'); const s = h.length > 2 ? h[h.length - 3] : h[0]; return s.charAt(0).toUpperCase() + s.slice(1); } catch (e) { return 'Enlace'; } }
+const urlsDe = v => (String(v || '').match(/https?:\/\/[^\s|;‖]+/g) || []).map(u => u.replace(/[).,]+$/, ''));
+function enlacesFuente(p) {
+  const out = [], vistos = new Set(), pon = (u, n, cls) => { if (!u || vistos.has(u) || /google\.[a-z.]+\/maps(\?|\/dir|\/search)/i.test(u)) return; vistos.add(u); out.push({u, n: n || fuNombre(u), cls: cls || ''}); };
+  const urls = String(p.url).split(/\s*;\s*/).filter(Boolean), ib = urls.find(u => /infobarrancos/i.test(u)), w = wikilocs(p);
+  if (p.t === 'b' || p.t === 'f') {           // Wikiloc primero: el directo del mapa de origen; si no, la ficha de Infobarrancos (lo trae dentro)
+    w.forEach((u, i) => pon(u, 'Wikiloc' + (/^B-IB-/.test(p.id) ? ' (Infobarrancos)' : '') + (i ? ' ' + (i + 1) : ''), 'wl'));
+    if (!w.length && ib) { out.push({u: ib, n: 'Wikiloc (dentro de Infobarrancos)', cls: 'wl'}); }
+  }
+  urls.forEach(u => pon(u));
+  const nt = {}, tn = x => (x.fu ? x.fu.replace(/\s*\(.*$/, '') : fuNombre(x.u)); p.topo.forEach(x => { nt[tn(x)] = (nt[tn(x)] || 0) + 1; });
+  const it = {}; p.topo.forEach(x => { const n = tn(x); it[n] = (it[n] || 0) + 1; pon(x.u, '📐 Topo ' + n + (nt[n] > 1 ? ' ' + it[n] : ''), 'tp'); });
+  p.acc.forEach(x => pon(x.u, (x.fu ? x.fu.replace(/\s*\(.*$/, '') : fuNombre(x.u)) + (/gpx/i.test(x.t) ? ' · GPX' : /track/i.test(x.t) ? ' · track' : '')));
+  [p.fu, p.ps && p.ps.fu, p.pi && p.pi.fu, p.pf, p.pn].forEach(v => urlsDe(v).forEach(u => pon(u)));
+  if (p.cau) pon(p.cau, 'Caudales');
+  return out;
+}
+function fichaFuentes(p) {
+  const l = enlacesFuente(p); if (!l.length) return '';
+  return `<div class="fts">${l.map(x => `<a class="ft ${x.cls}" href="${esc(x.u)}" target="_blank" rel="noopener">${esc(x.n)}</a>`).join('')}</div>`;
+}
+// ---------- E-069: PREFERENCIA a la ruta de Wikiloc que trae el mapa de origen de Rafael (Infobarrancos: probadas y corregidas) ----------
+// Solo enlace (Wikiloc no permite copiar sus tracks). Si el My Maps de Infobarrancos trae el enlace, va el primero; si no, se manda a la
+// ficha de Infobarrancos, que suele llevar su ruta de Wikiloc, antes de la búsqueda genérica.
+function wikilocs(p) { return String(p.url).split(/\s*;\s*/).filter(u => /wikiloc\.com/i.test(u)); }
+function fichaWikiloc(p) {
+  if (p.t !== 'b' && p.t !== 'f') return '';
+  const w = wikilocs(p), ib = /^B-IB-/.test(p.id) ? String(p.url).split(/\s*;\s*/).find(u => /infobarrancos/i.test(u)) : null;
+  if (w.length) return `<div class="pks">🥾 <b><a href="${esc(w[0])}" target="_blank" rel="noopener">Ruta Wikiloc${/^B-IB-/.test(p.id) ? ' (Infobarrancos)' : ''}</a></b>${w.length > 1 ? w.slice(1).map((u, i) => ` · <a href="${esc(u)}" target="_blank" rel="noopener">otra ${i + 2}</a>`).join('') : ''}<br><small>Ruta enlazada en el mapa de origen (probada): úsala para el parking y el inicio.</small></div>`;
+  if (ib) return `<div class="pks">🥾 <b><a href="${esc(ib)}" target="_blank" rel="noopener">Ruta Wikiloc en la ficha de Infobarrancos</a></b><br><small>Su ficha suele traer la ruta de Wikiloc probada; si no, «Buscar en Wikiloc» abajo.</small></div>`;
+  return '';
 }
 // ---------- dos parkings: superior (inicio) e inferior (salida / coche de la combinación) — E-065 ----------
 const PK = {s: {t: 'Parking superior', sub: 'inicio, aproximación', col: '#1565c0', ic: 'P↑'}, i: {t: 'Parking inferior', sub: 'salida, coche de la combinación', col: '#2e7d32', ic: 'P↓'}};
@@ -165,6 +209,17 @@ function construir() {
     m.bindPopup(() => ficha(p), {maxWidth: 320}); m._p = p; return m; });
 }
 
+// ---------- E-069: «Solo pernocta gratis» de un toque (enciende Pernocta y deja solo «Gratis»; al quitarlo vuelve como estaba) ----------
+let GRATIS_ANT = null;
+function estadoGratis() { const pg = [...document.querySelectorAll('.pg')], tp = document.querySelector('.t[value="p"]'), b = $('btnGratis'); if (!b) return;
+  const on = tp.checked && pg.every(e => e.checked === (e.value === 'g')), n = P.filter(p => p.t === 'p' && p.pg === 'g').length;
+  b.setAttribute('aria-pressed', on); b.textContent = on ? `🆓 Solo pernocta gratis: SÍ (${n.toLocaleString('es-ES')}) — toca para quitar` : `🆓 Solo pernocta gratis (${n.toLocaleString('es-ES')})`; }
+$('btnGratis').addEventListener('click', () => {
+  const pg = [...document.querySelectorAll('.pg')], tp = document.querySelector('.t[value="p"]'), on = $('btnGratis').getAttribute('aria-pressed') !== 'true';
+  if (on) { GRATIS_ANT = {pg: pg.map(e => e.checked), tp: tp.checked}; pg.forEach(e => e.checked = e.value === 'g'); tp.checked = true; }
+  else { if (GRATIS_ANT) { pg.forEach((e, i) => e.checked = GRATIS_ANT.pg[i]); tp.checked = GRATIS_ANT.tp; } else pg.forEach(e => e.checked = true); GRATIS_ANT = null; }
+  aplicar();
+});
 // ---------- filtros ----------
 const vals = c => new Set([...document.querySelectorAll('.' + c + ':checked')].map(e => e.value));
 function aplicar() {
@@ -189,7 +244,7 @@ function aplicar() {
   });
   cl.clearLayers(); cl.addLayers(on); VIS = on.map(m => m._p); pintaParkings(VIS);
   $('count').textContent = on.length.toLocaleString('es-ES') + ' puntos visibles' + (CEN && R != null ? ` a ≤ ${R} km` : '');
-  pintaCerca(cerca, R);
+  pintaCerca(cerca, R); estadoGratis();
 }
 // ---------- alrededor de mí / de un punto ----------
 let CEN = null, circ = null, cenMk = null, pick = false;

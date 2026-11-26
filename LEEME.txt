@@ -1,3 +1,31 @@
+E-056 — PWA v1.42 + KML v2 (tabla v40) — 2026-11-26 02:40 — tarea Cola de encargos
+CAMBIO (solo datos): + campings de los registros oficiales de alojamientos turísticos de BALEARES (Catàleg de Dades Obertes de les
+Illes Balears, CKAN de la CAIB, licencia CC BY): «Allotjaments Turístics Registrats a Mallorca» (Consell de Mallorca, act. 2026-11-07)
+y «Allotjaments turístics de Menorca» (Consell Insular de Menorca, act. 2026-11-07). Sus CSV/GeoJSON de descarga siguen dando 404:
+se leen por la API datastore_search del mismo catálogo (mismos datos). Solo 3 campings en total (Ibiza y Formentera no tienen conjunto):
+2 UNIDOS en Menorca (Son Bou, Alaior, CT-PM8, 939 plazas → P-OSM-1213; S'Atalaia, Ferreries, CT-PM10, 100 plazas → P-OSM-1711) con
+nombre oficial, municipio, signatura y plazas (sin teléfonos, correos ni direcciones); 1 de Mallorca NO UBICADO y no añadido por no
+traer coordenadas (Valentín Playa de Muro, Muro, CA/5). Sin puntos nuevos (26.808 filas). Programa: herramientas/e056_baleares_campings.py.
+NO HECHO: Castilla-La Mancha — el portal datosabiertos.castillalamancha.es está en reconstrucción («trabajando en el desarrollo de un
+nuevo Portal», visto hoy por navegador), el CSV «Camping y Áreas de autocaravanas» redirige a la portada, no hay copia en archive.org y el
+portal geográfico de la JCCM (ArcGIS Hub, 102 conjuntos) no tiene campings. Reintentar cuando abra el portal nuevo.
+Cachés app-v39/datos-v34. KML regenerados (solo cambia A5 campings, 1.803). NADA PUBLICADO.
+
+E-070 — v1.41 / tabla v39 (2026-11-26 01:30, tarea Cola de encargos; encargo de Rafael 2026-11-26 00:56, chat «Programa autónomo»):
+1) SIMAS DE WIKIDATA SIN DATOS: 349 simas/avencs/torcas de Wikidata que estaban OCULTAS (criterio E-066) pasan a VISIBLES
+   (339 en Cataluña, casi todas «Avenc de …»); nota en su ficha «Visible por E-070». Cuevas visibles 6.018 (antes 5.669), con topo 3.276.
+   KML B de cuevas: ahora 4 capas (máx. ~1.500 puntos por capa).
+2) ENLACES ARRIBA: en cada ficha, justo debajo del nombre, botones cortos con el nombre de cada fuente (Infobarrancos, Descente-Canyon,
+   OpenCanyon, Karsteau, Matienzo, Espeleoclub Viana, IDENA Navarra, Wikidata, OpenStreetMap, My Maps de origen, Caudales…), sin URLs
+   largas y sin repetir; topografías en marrón («📐 Topo <fuente> n»). Sacados de url, topo, acceso, fuente, origen de los parkings y caudales.
+   Abajo ya no se repite la lista «Fuente / reseña · Otra fuente».
+3) WIKILOC EN BARRANCOS: botón verde oscuro el PRIMERO: «Wikiloc (Infobarrancos)» directo si el mapa de origen trae el enlace (2 casos);
+   en los demás barrancos de Infobarrancos, «Wikiloc (dentro de Infobarrancos)» abre su ficha. Sacar el enlace de Wikiloc de dentro de la
+   ficha de Infobarrancos: PENDIENTE, NO SE PUEDE de forma automática (robots.txt de docuwiki.infobarrancos.es prohíbe ClaudeBot/anthropic-ai);
+   vías legales: permiso de Infobarrancos (correo) o GPX/enlaces que Rafael copie a mano (Compartida › wikiloc_gpx).
+4) CUEVAS: mismos botones cortos con el enlace de cada fuente (ficha, topo, track de acceso).
+Probada en Chromium (390 px) sin errores de consola.
+
 E-056 — MAPA DE ACTIVIDADES — PWA v1 + KML (2026-11-24 04:35, tarea Cola de encargos)
 NADA PUBLICADO NI COMPARTIDO: falta el OK de Rafael.
 
