@@ -3,6 +3,8 @@
 <title>Mapa de actividades</title>
 <meta name="description" content="Barrancos, vías ferratas, cuevas y pernocta en furgo, con filtros y uso sin cobertura.">
 <meta name="theme-color" content="#1f3b2d">
+<meta name="robots" content="noai, noimageai">
+<meta name="googlebot" content="noai, noimageai">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icono-192.png"><link rel="apple-touch-icon" href="icono-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
@@ -38,7 +40,7 @@ button.gratis{display:block;width:100%;margin:6px 0;font-size:15px;font-weight:6
 <div id="marca" hidden><span id="marcaTxt"></span><button id="marcaX" type="button">Cancelar</button></div>
 <button id="toggle" onclick="document.getElementById('app').classList.toggle('oculto');setTimeout(()=>map.invalidateSize(),50)">☰ Filtros</button>
 <div id="app"><div id="side">
-<h1>Mapa de actividades <small>v1.43</small></h1>
+<h1>Mapa de actividades <small>v1.44</small></h1>
 <div id="fuente"><small>Cargando datos…</small></div>
 <div id="estado"></div>
 <input id="q" type="search" placeholder="Buscar nombre o zona…" style="margin-top:8px">
@@ -91,7 +93,7 @@ button.gratis{display:block;width:100%;margin:6px 0;font-size:15px;font-weight:6
 <label><input type="checkbox" class="re" value="?" checked>Sin dato</label></fieldset>
 <details><summary>Leyenda, fuentes y licencias</summary>
 <small><b>Parkings</b>: <span class="pkb" style="background:#1565c0">P↑</span> superior (inicio, aproximación) y <span class="pkb" style="background:#2e7d32">P↓</span> inferior (salida, coche de la combinación); salen al acercar el mapa o al abrir una ficha, unidos al barranco con una línea. En la ficha (barrancos, ferratas, cuevas y refugios), «📍 Marcar parking» (en barrancos, superior o inferior): sale un marcador en tu posición GPS; si no es ahí, arrástralo con el dedo (o toca el mapa) y pulsa «✔ Confirmar» («Cancelar» para salir); después sale «↩ Deshacer». Lo marcado a mano manda sobre la fuente. Parkings, inicio y fin de barrancos: Descente-Canyon y OpenCanyon.org (CC BY-NC-SA 4.0).<br>Colores — barrancos por compromiso: I–II verde, III azul, IV rojo, V morado, VI negro. Ferratas: K1–K2 verde, K3 azul, K4 rojo, K5 morado, K6 negro, sin K gris. Pernocta: icono de furgoneta coloreado por CALIDAD: 1 punto por agua, vaciado, electricidad y aseos según la fuente + 1 si es gratis → 4–5 verde, 3 azul, 2 rojo, 1 morado, 0 negro (o sin datos); el tipo (área AC, camping, natural) sigue en el filtro y en la ficha. Cuevas: gris oscuro (ficha con «📐 Topografía» y «🥾 Acceso / GPX» cuando hay: solo enlaces a la web de origen; TODAS las que se encuentran aunque se repitan, Espeleoclub Viana primero y después Matienzo Caves Project, catálogo de Navarra (IDENA), Karstexplo (Alto Asón) y G.E.C.; solo cuevas de fuentes espeleológicas: las de OpenStreetMap sin fuente están ocultas). Refugios: magenta.<br><b>Otros mapas de pernocta (solo enlace; su autor no permite descargarlos)</b>: <a href="https://www.google.com/maps/d/viewer?mid=1ILN1xN19tqlpMTOK8KVzivgIFnp4ibM" target="_blank" rel="noopener">Áreas gratis y de pago</a> · <a href="https://www.google.com/maps/d/viewer?mid=1efLssE1fkiB7vaNZHRTH2VCWlEngho8" target="_blank" rel="noopener">Camper España para dormir</a>.</small>
-<p><small id="lic"></small></p></details>
+<p><small id="lic"></small></p><p><small><a href="condiciones.html" target="_blank" rel="noopener"><b>Condiciones de uso</b></a> — usar el mapa o enviar una aportación supone aceptarlas.</small></p></details>
 </div><div id="map"></div></div>
 <script src="vendor/leaflet.min.js"></script>
 <script src="vendor/leaflet.markercluster.min.js"></script>

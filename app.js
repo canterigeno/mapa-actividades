@@ -1,3 +1,4 @@
+// Mapa de actividades v1.44 (2026-11-27, E-077: sin LEEME publicado, página de condiciones de uso, meta noai; código y datos iguales que la v1.43).
 // Mapa de actividades v1.43 (2026-11-26, E-072: solo datos — +46 puntos de servicio GRATIS de OpenStreetMap para autocaravanas/furgonetas (vaciado y a veces agua; pernocta no confirmada), tabla v41; código igual que la v1.42).
 // Mapa de actividades v1.42 (2026-11-26, E-056: solo datos — campings de los registros oficiales de Mallorca y Menorca, tabla v40; código igual que la v1.41).
 // Mapa de actividades v1.41 (2026-11-26, E-070: ENLACES DE LAS FUENTES ARRIBA en cada ficha, como botones cortos con nombre (Infobarrancos, Descente-Canyon, OpenCanyon, Karsteau, Viana, Wikiloc…); en barrancos de Infobarrancos, botón «Wikiloc» el primero (directo si el mapa lo trae; si no, a la ficha de Infobarrancos, que no se puede leer automáticamente); tabla v39: ~338 simas de Wikidata sin datos VISIBLES).
@@ -280,7 +281,7 @@ map.on('locationerror', () => estado('No se ha podido obtener la ubicación.'));
 
 // ---------- sin cobertura: guardar la zona visible ----------
 // Respeta la política de uso de las teselas de OpenStreetMap: máximo 400 teselas por zona y zoom ≤ 15.
-// Para un mapa base completo sin cobertura está prevista una fase con teselas propias (PMTiles), ver LEEME.
+// Para un mapa base completo sin cobertura está prevista una fase con teselas propias (PMTiles) (documentación interna en Drive).
 const MAXT = 400;
 function estado(t) { $('estado').textContent = t; }
 function teselas(b, z) { const n = 2 ** z, X = lo => Math.floor((lo + 180) / 360 * n),
