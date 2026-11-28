@@ -1,4 +1,4 @@
-// Mapa de actividades v1.48 (2026-11-28, E-079: PROPUESTAS de los usuarios sin datos personales —parking de barrancos, cuevas y ferratas (inicio y fin), sitio de pernocta nuevo o corrección de uno a < 100 m con tipo, pago, servicios y descripción—, recuadro de confirmación con resumen y minimapa, envío a un Google Form con campo trampa, límite por dispositivo y cola sin cobertura, «Mis propuestas»; E-073: tabla v44 con gratis/pago de 51 áreas AC de las tandas 1–12).
+// Mapa de actividades v1.49 (2026-11-28, E-096: buscador en una franja fina arriba —nada flotando sobre el mapa—, botón «Compartir» el mapa siempre visible y «Compartir» en cada ficha con enlace que abre esa ficha (?id=) o ese punto (?ll=)). Antes v1.48 (2026-11-28, E-079: PROPUESTAS de los usuarios sin datos personales —parking de barrancos, cuevas y ferratas (inicio y fin), sitio de pernocta nuevo o corrección de uno a < 100 m con tipo, pago, servicios y descripción—, recuadro de confirmación con resumen y minimapa, envío a un Google Form con campo trampa, límite por dispositivo y cola sin cobertura, «Mis propuestas»; E-073: tabla v44 con gratis/pago de 51 áreas AC de las tandas 1–12).
 // Mapa de actividades v1.47 (2026-11-28, E-092: 9 sitios de pernocta de Park4Night aprobados por Rafael en la tabla v43 —solo nombre, coordenadas y enlace; gratis/pago sin dato—; E-094: BUSCADOR GENERAL siempre visible encima del mapa —lupa arriba, también en «solo mapa»—, sin tildes ni mayúsculas y con erratas; sugerencias con icono y color del tipo; elegir = centrar y abrir la ficha; un pueblo = centrar allí y enseñar lo cercano; sin servicios externos).
 // Mapa de actividades v1.46 (2026-11-28, E-093: fallos hallados probando en el realme — 235 barrancos SIN GRADO no se veían nunca (casilla «Sin dato» en Compromiso); el contador ya no pone «0» de una capa apagada; el service worker ya no borra al actualizarse la copia sin cobertura guardada por «Guardar zona» y por las capas de agua/servicios).
 // Mapa de actividades v1.45 (2026-11-28, E-073: capas aparte de AGUA y de SERVICIOS furgo/AC de OpenStreetMap en capas.json —se descargan al encenderlas—; los 46 puntos de servicio salen de la pernocta (tabla v42); E-087: la ficha va en un panel propio y ya no se cierra sola; E-088: tres vistas —mapa y filtros, solo mapa, solo filtros—).
@@ -100,6 +100,7 @@ async function cargar() {
   const conV = P.filter(p => p.t === 'b' && p.V != null).length, conT = P.filter(p => p.t === 'b' && p.tr != null).length;
   $('notaB').textContent = `Con V/A: ${conV} de ${n.b}; con tiempos: ${conT}. Graduación, compromiso y tiempos de Descente-Canyon (CC BY-NC-SA) donde existen; en el resto, el compromiso es provisional (dificultad de Infobarrancos).`;
   aplicaMios(); rellenaCC(); construir(); indiceBusca(); aplicar();   // E-094: índice del buscador
+  abreDesdeEnlace();   // E-096: ?id= o ?ll= del enlace compartido
 }
 // ---------- desplegables de comunidad/país y provincia ----------
 const ord = (x, y) => x.localeCompare(y, 'es');
@@ -587,11 +588,7 @@ function eligeBusca(n) {
   $('bx').hidden = false;
   setTimeout(() => { map.invalidateSize(); map.setView(FICHA_LL, Math.max(map.getZoom(), 14)); }, 60);
 }
-const BuscaCtl = L.Control.extend({options: {position: 'topleft'}, onAdd() {
-  const d = L.DomUtil.create('div', 'busca'); d.setAttribute('role', 'search');
-  d.innerHTML = '<div class="bcaja"><span class="blupa" aria-hidden="true">🔍</span><input id="bq" type="search" autocomplete="off" enterkeyhint="search" placeholder="Buscar barranco, cueva, ferrata, pueblo…" aria-label="Buscar en el mapa" aria-controls="bres"><button id="bx" type="button" hidden aria-label="Borrar búsqueda" title="Borrar">✕</button></div><div id="bres" role="listbox" hidden></div>';
-  L.DomEvent.disableClickPropagation(d); L.DomEvent.disableScrollPropagation(d); return d; }});
-map.addControl(new BuscaCtl());
+// E-096 (v1.49): el buscador ya no es un control encima del mapa; está en la franja #top de index.html.
 { let tmo = null; $('bq').addEventListener('input', () => { clearTimeout(tmo); Bsel.act = -1; tmo = setTimeout(pintaBusca, 120); }); }
 $('bq').addEventListener('focus', () => { cargaLugares().then(ok => { if (ok && $('bq').value) pintaBusca(); }); if ($('bq').value) pintaBusca(); });
 $('bq').addEventListener('keydown', e => {
@@ -730,7 +727,7 @@ function confirma(x, otro) {
 async function envia(x) {
   if (Date.now() - PROP_ABIERTA < PROP_MIN_MS) return estado('Revisa el resumen un momento antes de enviar.');
   if (enviadasHoy() >= PROP_LIM_DIA) return estado(`Máximo ${PROP_LIM_DIA} propuestas al día desde este dispositivo. Prueba mañana.`);
-  const r = Object.assign({v: 1, app: 'v1.48', fecha: new Date().toISOString(), disp: dispositivo()}, x);
+  const r = Object.assign({v: 1, app: 'v1.49', fecha: new Date().toISOString(), disp: dispositivo()}, x);
   if (PROPS.some(y => claveProp(y) === claveProp(r))) { cierraProp(); return estado('Esa propuesta ya estaba enviada o en cola.'); }
   PROPS.push(r); guardaProps(); cierraProp();
   await mandaPendientes();
@@ -760,3 +757,57 @@ function pintaMisProps() {
   el.innerHTML = PROPS.length ? PROPS.slice().reverse().slice(0, 50).map(x => `<li>${esc(String(x.fecha).slice(0, 10))} · ${x.tipo === 'parking' ? '🅿 ' + esc(x.parking) + ' — ' + esc(x.nombre_actividad) : '🚐 ' + esc(x.nombre) + (x.correccion_de ? ' (corrección)' : '')} · <a href="#" onclick="map.setView([${x.la},${x.lo}],16);return false">ver</a> · ${x.enviada ? 'enviada' : '<b>pendiente de envío</b>'}</li>`).join('') : '<li>Aún no has enviado ninguna.</li>';
 }
 pintaMisProps();
+
+// ---------- E-096 (v1.49): COMPARTIR — el mapa (botón de la franja de arriba) y cada ficha ----------
+// Usa el compartir del sistema (Web Share API); si no hay, copia al portapapeles y avisa «Enlace copiado».
+// El enlace de una ficha abre el mapa con esa ficha (?id=ID de la tabla); los puntos de agua/vaciado van por coordenadas (?ll=lat,lon).
+const MAPA_URL = location.hostname === 'canterigeno.github.io' ? 'https://canterigeno.github.io/mapa-actividades/' : location.origin + location.pathname.replace(/index\.html$/, '');
+const INVITA = 'Mapa gratis de barrancos, vías ferratas, cuevas y sitios para dormir en furgo en toda España, con filtros y sin cobertura:';
+let avisoT = null;
+function aviso(t, ms = 2600) { const a = $('aviso'); a.textContent = t; a.hidden = false; clearTimeout(avisoT); avisoT = setTimeout(() => { a.hidden = true; }, ms); }
+async function copia(t) {
+  try { if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(t); return true; } } catch (e) {}
+  try { const ta = document.createElement('textarea'); ta.value = t; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;left:-9999px;top:0';
+    document.body.appendChild(ta); ta.select(); const ok = document.execCommand('copy'); ta.remove(); return ok; } catch (e) { return false; }
+}
+async function comparte(titulo, texto, url) {
+  if (navigator.share) {
+    try { await navigator.share({title: titulo, text: texto, url}); return; }
+    catch (e) { if (e && e.name === 'AbortError') return; }   // cancelado por el usuario: nada más
+  }
+  const ok = await copia(texto + '\n' + url);
+  aviso(ok ? 'Enlace copiado' : 'Copia este enlace: ' + url, ok ? 2600 : 9000);
+}
+$('btnShare').onclick = () => comparte('Mapa de actividades', INVITA, MAPA_URL);
+function datosFicha() {
+  if (FICHA && FICHA_LL && FICHA.la === FICHA_LL[0] && FICHA.lo === FICHA_LL[1]) {
+    const p = FICHA; return {n: p.n || '(sin nombre)', tipo: BNOM[p.t] || '', zona: p.z || p.pr || '', la: p.la, lo: p.lo, url: MAPA_URL + '?id=' + encodeURIComponent(p.id)};
+  }
+  if (!FICHA_LL) return null;
+  const tit = ($('fichaC0').querySelector('.pop b') || {}).textContent || 'Punto del mapa', la = +(+FICHA_LL[0]).toFixed(6), lo = +(+FICHA_LL[1]).toFixed(6);
+  return {n: tit, tipo: FICHA ? 'Parking de ' + (FICHA.n || BNOM[FICHA.t] || '') : '', zona: '', la, lo, url: MAPA_URL + '?ll=' + la + ',' + lo};
+}
+$('fichaSh').onclick = () => {
+  const d = datosFicha(); if (!d) return;
+  const gm = `https://www.google.com/maps/search/?api=1&query=${d.la},${d.lo}`;
+  const txt = `${d.n}${d.tipo ? ' (' + d.tipo + ')' : ''}${d.zona ? ' — ' + d.zona : ''}\nCoordenadas: ${(+d.la).toFixed(5)}, ${(+d.lo).toFixed(5)}\nGoogle Maps: ${gm}\nEn el mapa:`;
+  comparte(d.n, txt, d.url);
+};
+let ENLACE_HECHO = false;
+function abreDesdeEnlace() {
+  if (ENLACE_HECHO) return; ENLACE_HECHO = true;
+  const q = new URLSearchParams(location.search), id = q.get('id'), ll = q.get('ll');
+  if (!id && !ll) return;
+  if ($('app').classList.contains('m-filtros')) ponModo('normal', false);
+  if (id) {
+    const p = P.find(x => x.id === id);
+    if (!p) { estado('El enlace apunta a un punto que ya no está en el mapa.'); return; }
+    fichaDe(p); setTimeout(() => { map.invalidateSize(); map.setView([p.la, p.lo], Math.max(map.getZoom(), 14)); }, 120);
+    return;
+  }
+  const m = /^(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)$/.exec(ll.trim());
+  if (!m) return;
+  const c = [+m[1], +m[2]]; FICHA_LL = c; selMk.setLatLng(c); if (!map.hasLayer(selMk)) selMk.addTo(map);
+  setTimeout(() => { map.invalidateSize(); map.setView(c, 16); }, 120);
+  estado('Punto compartido: marcado con un círculo rojo.');
+}
