@@ -1,3 +1,5 @@
+// Mapa de actividades v1.46 (2026-11-28, E-093: fallos hallados probando en el realme — 235 barrancos SIN GRADO no se veían nunca (casilla «Sin dato» en Compromiso); el contador ya no pone «0» de una capa apagada; el service worker ya no borra al actualizarse la copia sin cobertura guardada por «Guardar zona» y por las capas de agua/servicios).
+// Mapa de actividades v1.45 (2026-11-28, E-073: capas aparte de AGUA y de SERVICIOS furgo/AC de OpenStreetMap en capas.json —se descargan al encenderlas—; los 46 puntos de servicio salen de la pernocta (tabla v42); E-087: la ficha va en un panel propio y ya no se cierra sola; E-088: tres vistas —mapa y filtros, solo mapa, solo filtros—).
 // Mapa de actividades v1.44 (2026-11-27, E-077: sin LEEME publicado, página de condiciones de uso, meta noai; código y datos iguales que la v1.43).
 // Mapa de actividades v1.43 (2026-11-26, E-072: solo datos — +46 puntos de servicio GRATIS de OpenStreetMap para autocaravanas/furgonetas (vaciado y a veces agua; pernocta no confirmada), tabla v41; código igual que la v1.42).
 // Mapa de actividades v1.42 (2026-11-26, E-056: solo datos — campings de los registros oficiales de Mallorca y Menorca, tabla v40; código igual que la v1.41).
@@ -24,7 +26,7 @@ const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;
 const num = v => { if (v == null || v === '') return null; const n = parseFloat(String(v).replace(',', '.')); return isNaN(n) ? null : n; };
 
 // ---------- interfaz de filtros ----------
-$('lv').innerHTML = LV.map(l => `<label><input type="checkbox" class="lv" value="${l}" checked><span class="dot" style="background:${COL[LVC[l]]}"></span>${l}</label>`).join('');
+$('lv').innerHTML = LV.map(l => `<label><input type="checkbox" class="lv" value="${l}" checked><span class="dot" style="background:${COL[LVC[l]]}"></span>${l}</label>`).join('') + `<label title="Barrancos sin grado de compromiso en la fuente"><input type="checkbox" class="lv" value="?" checked><span class="dot" style="background:${COL.gris}"></span>Sin dato</label>`;   // E-093 (v1.46): antes los barrancos sin grado no se veían nunca
 $('kk').innerHTML = KS.map(k => `<label><input type="checkbox" class="k" value="${k}" checked><span class="dot" style="background:${COL[KC[k]]}"></span>${k || 'sin K'}</label>`).join('');
 $('vmax').innerHTML = '<option value="">Cualquiera</option>' + [1,2,3,4,5,6,7].map(v => `<option>${v}</option>`).join('');
 $('amax').innerHTML = $('vmax').innerHTML;
@@ -192,10 +194,27 @@ function pintaParkings(visibles) {
   const lista = z >= 11 ? visibles.filter(p => (p.ps || p.pi) && b.contains([p.la, p.lo])) : (FICHA && (FICHA.ps || FICHA.pi) ? [FICHA] : []);
   lista.slice(0, 400).forEach(p => ['s', 'i'].forEach(k => { const x = p[k === 's' ? 'ps' : 'pi']; if (!x) return;
     L.polyline([[p.la, p.lo], [x.la, x.lo]], {color: PK[k].col, weight: 2, dashArray: '4 6', opacity: .8, interactive: false}).addTo(capaP);
-    L.marker([x.la, x.lo], {icon: icoP(k), title: PK[k].t + ' — ' + p.n}).bindPopup(`<div class="pop"><b>${PK[k].t}</b> <small>(${PK[k].sub})</small><br>${esc(p.n)}<br><a href="${ir(x.la, x.lo)}" target="_blank" rel="noopener">🚗 Cómo llegar</a><br><small>Origen: ${origen(x.fu)}</small></div>`).addTo(capaP); }));
+    L.marker([x.la, x.lo], {icon: icoP(k), title: PK[k].t + ' — ' + p.n}).on('click', () => abreFicha(`<div class="pop"><b>${PK[k].t}</b> <small>(${PK[k].sub})</small><br>${esc(p.n)}<br><a href="${ir(x.la, x.lo)}" target="_blank" rel="noopener">🚗 Cómo llegar</a><br><small>Origen: ${origen(x.fu)}</small><br><a href="#" onclick="verFicha('${esc(p.id)}');return false">← Ficha de «${esc(p.n)}»</a></div>`, [x.la, x.lo], p)).addTo(capaP); }));
 }
-let FICHA = null, VIS = [];
-map.on('popupopen', e => { const p = e.popup._source && e.popup._source._p; if (p) { FICHA = p; pintaParkings(VIS); } });
+// ---------- E-087 (v1.45): la FICHA va en un PANEL PROPIO, fuera del mapa ----------
+// Antes era un popup de Leaflet y se cerraba sola: al abrirla, el mapa se desplazaba para enseñarla y el agrupador (clúster) quitaba
+// el marcador del mapa (en el móvil no deja margen fuera de la pantalla), y Leaflet cierra el popup de un marcador que sale del mapa;
+// las fichas de los parkings se cerraban también al mover el mapa porque esa capa se rehace. Ahora la ficha solo se cierra con ✕,
+// con Esc o al abrir otra; se desplaza por dentro si es larga y no mueve el mapa.
+const selMk = L.circleMarker([0, 0], {radius: 13, color: '#ff1744', weight: 3, fill: false, interactive: false});
+let FICHA = null, FICHA_LL = null, VIS = [];   // FICHA: actividad abierta (para pintar sus parkings); FICHA_LL: dónde está lo que se enseña
+function abreFicha(html, ll, p) {
+  $('fichaC0').innerHTML = html; $('ficha').hidden = false; $('ficha').scrollTop = 0;
+  FICHA_LL = ll; FICHA = p;   // p: la actividad (también al abrir uno de sus parkings) o null (agua/servicios)
+  selMk.setLatLng(ll); if (!map.hasLayer(selMk)) selMk.addTo(map);
+  pintaParkings(VIS);
+}
+function fichaDe(p) { abreFicha(ficha(p), [p.la, p.lo], p); }
+window.verFicha = id => { const p = P.find(x => x.id === id); if (p) fichaDe(p); };
+function cierraFicha() { $('ficha').hidden = true; $('fichaC0').innerHTML = ''; FICHA = null; FICHA_LL = null; selMk.remove(); pintaParkings(VIS); }
+$('fichaX').onclick = cierraFicha;
+$('fichaCen').onclick = () => { if (FICHA_LL) map.setView(FICHA_LL, Math.max(map.getZoom(), 13)); };
+addEventListener('keydown', e => { if (e.key === 'Escape' && !$('ficha').hidden) cierraFicha(); });
 map.on('zoomend moveend', () => pintaParkings(VIS));
 // ---------- E-062: pernocta con icono de FURGONETA coloreada por CALIDAD (criterio APROBADO por Rafael el 2026-11-25 10:10) ----------
 // 1 punto por cada servicio que dé la fuente (agua, vaciado, electricidad, aseos/duchas) + 1 si es gratis.
@@ -207,8 +226,47 @@ const VAN = c => `<svg viewBox="0 0 26 18" width="24" height="17"><path d="M2 4h
 const ICOVAN = {}; Object.keys(COL).forEach(k => ICOVAN[k] = L.divIcon({className: 'van', html: VAN(COL[k]), iconSize: [24, 17], iconAnchor: [12, 9]}));
 function construir() {
   MK = P.map(p => { const m = p.t === 'p' ? L.marker([p.la, p.lo], {icon: ICOVAN[QCOL[calidad(p)]], title: p.n}) : L.circleMarker([p.la, p.lo], {radius: p.t === 'r' ? 6 : 7, color: '#0007', weight: 1, fillColor: color(p), fillOpacity: .95});
-    m.bindPopup(() => ficha(p), {maxWidth: 320}); m._p = p; return m; });
+    m.on('click', () => fichaDe(p)); m._p = p; return m; });   // E-087: panel propio, no popup de Leaflet
 }
+
+// ---------- E-073 (v1.45): CAPAS APARTE de AGUA y de SERVICIOS para furgonetas/autocaravanas (OpenStreetMap) ----------
+// Van en capas.json (≈1 MB comprimido) y solo se descargan al encender la capa. No son pernocta: no cuentan en «Solo pernocta gratis».
+const CAPAS_URL = 'capas.json';
+const XK = {f: {n: 'Fuente de agua potable', c: '#1e88e5', r: 5}, g: {n: 'Grifo', c: '#29b6f6', r: 5}, d: {n: 'Llenado de depósito (punto de agua)', c: '#0d47a1', r: 6},
+  m: {n: 'Manantial potable', c: '#00897b', r: 5}, x: {n: 'Manantial (potabilidad sin confirmar)', c: '#80cbc4', r: 4.5}, v: {n: 'Vaciado para furgonetas y autocaravanas', c: '#6d4c41', r: 7}};
+const FLN = {A: 'agua', G: 'aguas grises', N: 'WC químico / aguas negras', E: 'electricidad', C: 'solo clientes', T: 'de temporada', P: 'potable según OSM'};
+let X = [], XMK = [], XCARGA = null, XSIG = '';
+const clX = cls => L.markerClusterGroup({chunkedLoading: true, disableClusteringAtZoom: 15, maxClusterRadius: 50, showCoverageOnHover: false,
+  iconCreateFunction: c => { const n = c.getChildCount(); return L.divIcon({html: `<div><span>${n >= 10000 ? Math.round(n / 1000) + 'k' : n}</span></div>`, className: 'marker-cluster ' + cls, iconSize: L.point(36, 36)}); }});
+const clA = clX('clag'), clS = clX('clsv'); map.addLayer(clA); map.addLayer(clS);
+function cargaCapas() {
+  if (XCARGA) return XCARGA;
+  XCARGA = (async () => {
+    estado('Cargando agua y servicios (≈1 MB)…'); let txt;
+    try { const r = await fetch(CAPAS_URL, {cache: 'no-cache'}); if (!r.ok) throw new Error(r.status); txt = await r.clone().text();
+      if ('caches' in window) caches.open('datos-v1').then(c => c.put(CAPAS_URL, r)).catch(() => {}); }
+    catch (e) { const c = await caches.match(CAPAS_URL).catch(() => null) || await caches.match(new URL(CAPAS_URL, location.href).href).catch(() => null);
+      if (!c) { estado('No se han podido cargar el agua y los servicios (sin cobertura y sin copia guardada).'); XCARGA = null; return false; } txt = await c.text(); }
+    const j = JSON.parse(txt), pv = j.prov.map(s => s.split('|'));
+    X = j.rows.map(r => ({la: r[0], lo: r[1], k: r[2], n: r[3] || '', osm: r[4], fl: r[5] || '', pg: r[6] || '', pr: pv[r[7]][0], cc: pv[r[7]][1]}));
+    XMK = X.map(x => { const s = XK[x.k], m = L.circleMarker([x.la, x.lo], {radius: s.r, color: '#fff', weight: x.k === 'v' ? 2 : 1, fillColor: s.c, fillOpacity: .95});
+      m.on('click', () => abreFicha(fichaX(x), [x.la, x.lo], null)); m._x = x; return m; });
+    const n = {}; X.forEach(x => n[x.k] = (n[x.k] || 0) + 1);
+    document.querySelectorAll('.xk').forEach(e => { const s = e.parentNode.querySelector('.n'); if (s) s.textContent = '(' + (n[e.value] || 0).toLocaleString('es-ES') + ')'; });
+    $('licX').textContent = j.licencias || ''; estado(''); return true;
+  })();
+  return XCARGA;
+}
+function fichaX(x) {
+  const s = XK[x.k], fl = [...x.fl].map(c => FLN[c]).filter(Boolean);
+  const osm = `https://www.openstreetmap.org/${({n: 'node', w: 'way', r: 'relation'})[x.osm[0]]}/${x.osm.slice(1)}`;
+  const R = [['Tipo', s.n], x.k === 'v' || x.k === 'd' ? ['Pago', {g: 'Gratis (según OSM)', p: 'De pago', '?': 'Sin dato'}[x.pg] || 'Sin dato'] : null,
+    fl.length ? ['Tiene', fl.join(', ')] : null, ['Provincia', x.pr + (x.cc ? ' (' + x.cc + ')' : '')],
+    ['Ojo', x.k === 'x' ? 'OpenStreetMap no dice si es potable: no la bebas sin comprobarlo.' : x.k === 'v' ? 'Es un punto de servicio, NO un sitio de pernocta: mira las señales y la ordenanza municipal.' : 'Dato de OpenStreetMap: puede estar seco, cerrado o haber cambiado.']].filter(Boolean);
+  return `<div class="pop"><b>${esc(x.n || s.n)}</b><div class="fts"><a class="ft" href="${osm}" target="_blank" rel="noopener">OpenStreetMap</a></div><table>${R.map(r => `<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td></tr>`).join('')}</table>
+  <a href="https://www.google.com/maps/dir/?api=1&destination=${x.la},${x.lo}" target="_blank" rel="noopener">Cómo llegar</a> · <a href="#" onclick="alrededor(${x.la},${x.lo},'${esc(x.n || s.n).replace(/'/g, '')}');return false">Buscar alrededor</a></div>`;
+}
+document.querySelectorAll('.cap').forEach(e => e.addEventListener('change', () => { if (e.checked) cargaCapas().then(ok => { if (ok) aplicar(); }); }));
 
 // ---------- E-069: «Solo pernocta gratis» de un toque (enciende Pernocta y deja solo «Gratis»; al quitarlo vuelve como estaba) ----------
 let GRATIS_ANT = null;
@@ -233,7 +291,7 @@ function aplicar() {
   P.forEach((p, i) => {
     if (!T.has(p.t)) return;
     if (CC && p.cc !== CC) return; if (PR && p.pr !== PR) return;
-    if (p.t === 'b') { if (!LVs.has(p.lv)) return; if (!okMax(p.V, vmax) || !okMax(p.A, amax) || !okRet(p.tr, ret) || !okMax(p.ta, apx) || !okMax(p.td, dsc)) return;
+    if (p.t === 'b') { if (!LVs.has(p.lv || '?')) return; if (!okMax(p.V, vmax) || !okMax(p.A, amax) || !okRet(p.tr, ret) || !okMax(p.ta, apx) || !okMax(p.td, dsc)) return;
       if (sinComb && (p.comb ? p.comb.startsWith('s') : !inc)) return; }
     if (p.t === 'f' && !Ks.has(p.K)) return;
     if (p.t === 'p' && (!PT.has(p.pt) || !PG.has(p.pg))) return;
@@ -244,7 +302,20 @@ function aplicar() {
     on.push(MK[i]);
   });
   cl.clearLayers(); cl.addLayers(on); VIS = on.map(m => m._p); pintaParkings(VIS);
-  $('count').textContent = on.length.toLocaleString('es-ES') + ' puntos visibles' + (CEN && R != null ? ` a ≤ ${R} km` : '');
+  // E-073: agua y servicios (capas aparte). Solo se vuelven a agrupar si cambia algo que les afecta (son ~60.000 puntos).
+  const XS = vals('cap'), XKs = vals('xk'), XG = vals('xg'), onA = [], onS = [];
+  if (XS.size && X.length) X.forEach((x, j) => {
+    if (!XS.has(x.k === 'v' ? 's' : 'a') || !XKs.has(x.k)) return;
+    if ((x.k === 'v' || x.k === 'd') && !XG.has(x.pg || '?')) return;
+    if (CC && x.cc !== CC) return; if (PR && x.pr !== PR) return;
+    if (q && !(x.n + ' ' + x.pr + ' ' + x.cc + ' ' + XK[x.k].n).toLowerCase().includes(q)) return;
+    if (CEN) { const d = distKm(CEN.lat, CEN.lng, x.la, x.lo); if (R != null && d > R) return; cerca.push([d, -1 - j]); }
+    (x.k === 'v' ? onS : onA).push(XMK[j]);
+  });
+  const sig = [[...XS], [...XKs], [...XG], CC, PR, q, CEN ? [CEN.lat, CEN.lng, R] : '', X.length].join('|');
+  if (sig !== XSIG) { XSIG = sig; clA.clearLayers(); clA.addLayers(onA); clS.clearLayers(); clS.addLayers(onS); }
+  $('count').textContent = on.length.toLocaleString('es-ES') + ' puntos visibles' + (CEN && R != null ? ` a ≤ ${R} km` : '') +
+    (XS.size ? (X.length ? (XS.has('a') ? ` · 💧 ${onA.length.toLocaleString('es-ES')} de agua` : '') + (XS.has('s') ? ` · 🚐 ${onS.length.toLocaleString('es-ES')} vaciados` : '') : ' · cargando agua y servicios…') : '');   // E-093 (v1.46): solo las capas encendidas
   pintaCerca(cerca, R); estadoGratis();
 }
 // ---------- alrededor de mí / de un punto ----------
@@ -256,9 +327,14 @@ function pintaCerca(cerca, R) {
   if (!CEN) { $('cerca').innerHTML = ''; return; }
   if (R != null) circ = L.circle(CEN, {radius: R * 1000, color: '#1e88e5', weight: 1, fillOpacity: .04, interactive: false}).addTo(map);
   cerca.sort((a, b) => a[0] - b[0]);
-  $('cerca').innerHTML = cerca.length ? cerca.slice(0, 100).map(([d, i]) => `<div class="cer" data-i="${i}" style="cursor:pointer;padding:2px 0;border-bottom:1px solid var(--line)"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${color(P[i])}"></span> ${d < 10 ? d.toFixed(1) : Math.round(d)} km · ${esc(TIPO[P[i].t] || '')} · ${esc(P[i].n || '(sin nombre)')}</div>`).join('') + (cerca.length > 100 ? `<small>… y ${cerca.length - 100} más (acerca el radio)</small>` : '') : '<small>Nada con estos filtros en ese radio.</small>';
+  const fila = ([d, i]) => { const x = i < 0 ? X[-1 - i] : null, p = x ? null : P[i];   // i < 0: punto de agua o servicio (E-073)
+    return `<div class="cer" data-i="${i}" style="cursor:pointer;padding:2px 0;border-bottom:1px solid var(--line)"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${x ? XK[x.k].c : color(p)}"></span> ${d < 10 ? d.toFixed(1) : Math.round(d)} km · ${esc(x ? XK[x.k].n : TIPO[p.t] || '')}${x ? (x.n ? ' · ' + esc(x.n) : '') : ' · ' + esc(p.n || '(sin nombre)')}</div>`; };
+  $('cerca').innerHTML = cerca.length ? cerca.slice(0, 100).map(fila).join('') + (cerca.length > 100 ? `<small>… y ${cerca.length - 100} más (acerca el radio)</small>` : '') : '<small>Nada con estos filtros en ese radio.</small>';
 }
-$('cerca').addEventListener('click', e => { const el = e.target.closest('.cer'); if (!el) return; const m = MK[+el.dataset.i]; cl.zoomToShowLayer(m, () => m.openPopup()); });
+$('cerca').addEventListener('click', e => { const el = e.target.closest('.cer'); if (!el) return; const i = +el.dataset.i;
+  if ($('app').classList.contains('m-filtros')) ponModo('normal', false);   // E-088: desde «solo filtros» se vuelve a ver el mapa
+  if (i < 0) { const x = X[-1 - i]; abreFicha(fichaX(x), [x.la, x.lo], null); } else fichaDe(P[i]);
+  setTimeout(() => { map.invalidateSize(); map.setView(FICHA_LL, Math.max(map.getZoom(), 13)); }, 80); });
 function ponCentro(ll, txt) {
   CEN = L.latLng(ll); if (cenMk) cenMk.remove();
   cenMk = L.circleMarker(CEN, {radius: 9, color: '#e53935', weight: 3, fillColor: '#fff', fillOpacity: .9, interactive: false}).addTo(map);
@@ -266,7 +342,7 @@ function ponCentro(ll, txt) {
   if ($('rad').value === '') $('rad').value = '25';
   aplicar(); const R = num($('rad').value); if (R) map.fitBounds(CEN.toBounds(R * 2000));
 }
-window.alrededor = (la, lo, n) => { map.closePopup(); ponCentro([la, lo], 'alrededor de ' + n); };
+window.alrededor = (la, lo, n) => { cierraFicha(); ponCentro([la, lo], 'alrededor de ' + n); };
 $('btnPick').onclick = () => { pick = !pick; $('btnPick').classList.toggle('pri', pick); estado(pick ? 'Toca el mapa donde quieras buscar alrededor.' : ''); };
 map.on('click', e => { if (!pick) return; pick = false; $('btnPick').classList.remove('pri'); estado(''); ponCentro(e.latlng, 'punto elegido'); });
 $('btnCenX').onclick = () => { CEN = null; if (cenMk) cenMk.remove(); cenMk = null; $('btnCenX').hidden = true; $('cenTxt').textContent = '(sin centro: pulsa «Dónde estoy» o elige un punto)'; aplicar(); };
@@ -295,6 +371,7 @@ $('btnZona').onclick = async () => {
   for (let i = 0; i < lista.length; i++) { try { if (!(await c.match(lista[i]))) { const r = await fetch(lista[i], {mode: 'cors'}); if (r.ok) await c.put(lista[i], r); } ok++; } catch (e) {}
     if (i % 20 === 0) estado(`Guardando mapa: ${i}/${lista.length}…`); }
   const dc = await caches.open('datos-v1'); try { const r = await fetch(DATOS_URL, {cache: 'no-cache'}); if (r.ok) await dc.put(DATOS_URL, r); } catch (e) {}
+  if (X.length) try { const r = await fetch(CAPAS_URL, {cache: 'no-cache'}); if (r.ok) await dc.put(CAPAS_URL, r); } catch (e) {}   // E-073
   estado(`Zona guardada para usar sin cobertura: ${ok} teselas (zoom ${z0}–${Math.min(15, z0 + 3)}) y los puntos.`);
 };
 
@@ -335,7 +412,7 @@ let MKPK = null;
 const quitaMk = () => { if (MKPK) { map.removeLayer(MKPK); MKPK = null; } };
 window.marcaParking = (id, k) => {
   const p = P.find(x => x.id === id); if (!p) return; k = k || 's';
-  map.closePopup(); quitaMk(); MARCANDO = {id, k}; DESHACER = null;
+  cierraFicha(); quitaMk(); MARCANDO = {id, k}; DESHACER = null;
   const x = p[k === 's' ? 'ps' : 'pi'], ini = x ? [x.la, x.lo] : [p.la, p.lo];
   MKPK = L.marker(ini, {draggable: true, autoPan: true, icon: L.divIcon({className: 'pk', html: `<span style="background:${PK[k].col};font-size:15px;padding:4px 7px">${PK[k].ic}</span>`, iconSize: [36, 26], iconAnchor: [18, 13]}), zIndexOffset: 2000}).addTo(map);
   map.setView(ini, Math.max(map.getZoom(), 15));
@@ -363,13 +440,13 @@ function guardaPk(id, k, la, lo, como) {
   avisoMarca(`✅ Guardado el <b>${nomPk(p, k)}</b> de «${esc(p.n)}» (en este móvil). <button type="button" onclick="deshacerPk()">↩ Deshacer</button>`);
   $('marcaX').textContent = 'Cerrar';
   estado('Para que llegue a todos: «Exportar mis parkings».');
-  const m = MK[P.indexOf(p)]; if (m) cl.zoomToShowLayer(m, () => m.openPopup());
+  fichaDe(p);   // E-087: vuelve a abrir su ficha (panel propio)
 }
 window.deshacerPk = () => { if (!DESHACER) return; const {id, k, antes} = DESHACER; DESHACER = null;
   if (antes) { MIOS[id] = MIOS[id] || {}; MIOS[id][k] = antes; } else if (MIOS[id]) { delete MIOS[id][k]; if (!MIOS[id].s && !MIOS[id].i) delete MIOS[id]; }
   guardaMios(); rehaz(); avisoMarca(''); $('marcaX').textContent = 'Cancelar'; estado('Deshecho: el parking vuelve a como estaba.'); };
 map.on('click', e => { if (!MARCANDO || !MKPK) return; MKPK.movido = true; MKPK.setLatLng(e.latlng); });
-window.quitaParking = (id, k) => { if (MIOS[id]) { delete MIOS[id][k]; if (!MIOS[id].s && !MIOS[id].i) delete MIOS[id]; } guardaMios(); map.closePopup(); rehaz(); estado('Parking marcado quitado (vuelve el de la fuente, si lo hay).'); };
+window.quitaParking = (id, k) => { if (MIOS[id]) { delete MIOS[id][k]; if (!MIOS[id].s && !MIOS[id].i) delete MIOS[id]; } guardaMios(); rehaz(); verFicha(id); estado('Parking marcado quitado (vuelve el de la fuente, si lo hay).'); };
 $('btnExp').onclick = () => {
   const ids = Object.keys(MIOS); if (!ids.length) return estado('Aún no has marcado ningún parking.');
   const q = v => '"' + String(v ?? '').replace(/"/g, '""') + '"', filas = [];
@@ -380,6 +457,25 @@ $('btnExp').onclick = () => {
   estado(`${filas.length} parkings exportados.`);
 };
 $('verP').addEventListener('change', () => pintaParkings(VIS));
+
+// ---------- E-088 (v1.45): TRES VISTAS — mapa y filtros · solo mapa (pantalla completa) · solo filtros ----------
+// Botón siempre visible abajo a la izquierda; se recuerda la última vista en este dispositivo. «Solo mapa» pide además la pantalla
+// completa del navegador si lo permite (en iPhone no: solo se ocultan los filtros).
+const VISTA_KEY = 'e056-vista';
+function ponModo(m, gesto) {
+  if (!['normal', 'mapa', 'filtros'].includes(m)) m = 'normal';
+  const app = $('app'); app.classList.toggle('m-mapa', m === 'mapa'); app.classList.toggle('m-filtros', m === 'filtros');
+  document.body.className = 'v-' + m;
+  document.querySelectorAll('#modos button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.m === m)));
+  try { localStorage.setItem(VISTA_KEY, m); } catch (e) {}
+  if (gesto) { const fs = document.fullscreenElement, el = document.documentElement;
+    if (m === 'mapa' && !fs && el.requestFullscreen) el.requestFullscreen().catch(() => {});
+    if (m !== 'mapa' && fs && document.exitFullscreen) document.exitFullscreen().catch(() => {}); }
+  setTimeout(() => map.invalidateSize(), 80);
+}
+document.querySelectorAll('#modos button').forEach(b => b.addEventListener('click', () => ponModo(b.dataset.m, true)));
+document.addEventListener('fullscreenchange', () => setTimeout(() => map.invalidateSize(), 80));
+{ let v = 'normal'; try { v = localStorage.getItem(VISTA_KEY) || 'normal'; } catch (e) {} ponModo(v, false); }
 
 // ---------- instalación (PWA) ----------
 let promptInst;

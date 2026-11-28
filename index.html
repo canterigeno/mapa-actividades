@@ -24,9 +24,18 @@ button{padding:7px 10px;border:1px solid var(--line);border-radius:6px;backgroun
 button.pri{background:var(--acc);color:#fff;border-color:transparent}
 #count{font-weight:600;margin:6px 0}.dot{display:inline-block;width:10px;height:10px;border-radius:50%;border:1px solid #0004}
 #estado{font-size:12px;margin:4px 0;color:var(--warn)}
-#toggle{display:none;position:absolute;z-index:1000;top:10px;right:10px}
-@media (max-width:700px){#app{flex-direction:column}#side{width:100%;max-height:48%;border-right:0;border-bottom:1px solid var(--line)}#app.oculto #side{display:none}#toggle{display:block}}
-.pop b{font-size:14px}.pop a{color:#1f6b47}.pop td{padding:1px 6px 1px 0;vertical-align:top}
+#app{position:relative}#side{padding-bottom:70px}
+@media (max-width:700px){#app{flex-direction:column}#side{width:100%;max-height:48%;border-right:0;border-bottom:1px solid var(--line)}}
+/* E-088: tres vistas */#app.m-mapa #side{display:none}#app.m-filtros #map,#app.m-filtros #ficha{display:none}#app.m-filtros #side{width:100%;max-width:none;max-height:none;flex:1;border:0}
+#modos{position:fixed;z-index:1100;left:10px;bottom:24px;display:flex;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:0 2px 8px #0005;overflow:hidden}
+#modos button{margin:0;border:0;border-radius:0;padding:9px 13px;font-size:18px;line-height:1;background:transparent;color:var(--fg)}#modos button+button{border-left:1px solid var(--line)}#modos button[aria-pressed="true"]{background:var(--acc);color:#fff}
+/* E-087: ficha en panel propio */#ficha{position:absolute;z-index:1050;right:12px;top:12px;width:min(390px,calc(100% - 24px));max-height:calc(100% - 24px);overflow:auto;overscroll-behavior:contain;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:10px;box-shadow:0 4px 16px #0006;padding:0 12px 12px}
+#ficha .fcab{position:sticky;top:0;display:flex;justify-content:flex-end;gap:4px;background:var(--panel);padding:6px 0 2px;margin:0 -4px}#ficha .fcab button{margin:0;padding:5px 10px;font-size:16px;line-height:1}
+#ficha{overflow-x:hidden}#ficha table{width:100%;border-collapse:collapse;table-layout:fixed}#ficha td:first-child{width:8.2em}#ficha td:last-child{overflow-wrap:anywhere}#ficha .pks,#ficha small{overflow-wrap:anywhere}
+@media (min-width:701px){body.v-normal #modos{left:342px}}
+@media (max-width:700px){#ficha{left:0;right:0;top:0;bottom:auto;width:100%;max-height:48%;border-radius:0 0 12px 12px}#app.m-mapa #ficha{top:auto;bottom:0;max-height:55%;border-radius:12px 12px 0 0;padding-bottom:64px}}
+.marker-cluster.clag{background:#1e88e566}.marker-cluster.clag div{background:#1e88e5cc;color:#fff}.marker-cluster.clsv{background:#6d4c4166}.marker-cluster.clsv div{background:#6d4c41dd;color:#fff}
+.pop b{font-size:14px}.pop a{color:var(--acc)}.pop td{padding:1px 6px 1px 0;vertical-align:top}
 .row{display:flex;gap:6px}#lv,#kk{display:flex;flex-wrap:wrap}fieldset{min-width:0}.row>*{flex:1}
 .pk span,.pkb{display:inline-block;color:#fff;font:700 11px/18px system-ui;padding:0 5px;border-radius:5px;border:1px solid #fff;box-shadow:0 1px 3px #0006;white-space:nowrap}
 .pks{margin:6px 0;padding:6px;border:1px solid var(--line);border-radius:6px}.pkr{margin:0 0 5px}
@@ -38,9 +47,9 @@ details{margin:8px 0}summary{cursor:pointer;font-weight:600}
 button.gratis{display:block;width:100%;margin:6px 0;font-size:15px;font-weight:600;padding:9px 10px;border:2px solid #2e7d32;color:#2e7d32;background:var(--bg);border-radius:8px}button.gratis[aria-pressed="true"]{background:#2e7d32;color:#fff}
 .van{background:none;border:0}.van svg{filter:drop-shadow(0 1px 1px #0008)}</style></head><body>
 <div id="marca" hidden><span id="marcaTxt"></span><button id="marcaX" type="button">Cancelar</button></div>
-<button id="toggle" onclick="document.getElementById('app').classList.toggle('oculto');setTimeout(()=>map.invalidateSize(),50)">☰ Filtros</button>
+<div id="modos" role="group" aria-label="Vista"><button type="button" data-m="normal" aria-pressed="true" title="Mapa y filtros" aria-label="Mapa y filtros">◧</button><button type="button" data-m="mapa" aria-pressed="false" title="Solo mapa (pantalla completa)" aria-label="Solo mapa">⛶</button><button type="button" data-m="filtros" aria-pressed="false" title="Solo filtros" aria-label="Solo filtros">☰</button></div>
 <div id="app"><div id="side">
-<h1>Mapa de actividades <small>v1.44</small></h1>
+<h1>Mapa de actividades <small>v1.46</small></h1>
 <div id="fuente"><small>Cargando datos…</small></div>
 <div id="estado"></div>
 <input id="q" type="search" placeholder="Buscar nombre o zona…" style="margin-top:8px">
@@ -66,6 +75,8 @@ button.gratis{display:block;width:100%;margin:6px 0;font-size:15px;font-weight:6
 <label><input type="checkbox" class="t" value="c" checked>Cuevas</label>
 <label><input type="checkbox" class="t" value="p">Pernocta</label>
 <label><input type="checkbox" class="t" value="r">Refugios</label>
+<label><input type="checkbox" class="cap" value="a">💧 Agua</label>
+<label><input type="checkbox" class="cap" value="s">🚐 Vaciado furgo/AC</label>
 <div><label><input type="checkbox" id="soloTopo">Cuevas: solo las que tienen topografía</label></div></fieldset>
 <fieldset><legend>Barrancos</legend>
 <div><b>Compromiso</b> <small>(color)</small></div><div id="lv"></div>
@@ -86,15 +97,27 @@ button.gratis{display:block;width:100%;margin:6px 0;font-size:15px;font-weight:6
 <label><input type="checkbox" class="pg" value="g" checked>Gratis</label>
 <label><input type="checkbox" class="pg" value="p" checked>De pago</label>
 <label><input type="checkbox" class="pg" value="?" checked>Sin dato (desconocido)</label><br><small>«Gratis» solo cuando la fuente lo dice; si no se sabe, va a «Sin dato (desconocido)», nunca a gratis.</small></fieldset>
+<fieldset><legend>💧 Agua y 🚐 servicios <small>(capas aparte)</small></legend>
+<div><b>Agua</b></div>
+<label><input type="checkbox" class="xk" value="f" checked><span class="dot" style="background:#1e88e5"></span>Fuentes potables <small class="n"></small></label>
+<label><input type="checkbox" class="xk" value="g" checked><span class="dot" style="background:#29b6f6"></span>Grifos <small class="n"></small></label>
+<label><input type="checkbox" class="xk" value="d" checked><span class="dot" style="background:#0d47a1"></span>Llenado de depósito <small class="n"></small></label>
+<label><input type="checkbox" class="xk" value="m" checked><span class="dot" style="background:#00897b"></span>Manantiales potables <small class="n"></small></label>
+<label><input type="checkbox" class="xk" value="x"><span class="dot" style="background:#80cbc4"></span>Manantiales sin confirmar <small class="n"></small></label>
+<div style="margin-top:4px"><b>Servicios furgo/AC</b></div>
+<label><input type="checkbox" class="xk" value="v" checked><span class="dot" style="background:#6d4c41"></span>Vaciado (grises / WC químico) <small class="n"></small></label><br>
+<label><input type="checkbox" class="xg" value="g" checked>Gratis</label><label><input type="checkbox" class="xg" value="p" checked>De pago</label><label><input type="checkbox" class="xg" value="?" checked>Sin dato</label>
+<br><small>Se descargan al encender «💧 Agua» o «🚐 Vaciado» en Tipo (≈1 MB). No son sitios para dormir: no cuentan en «Solo pernocta gratis». «Potable» solo si OpenStreetMap lo dice.</small></fieldset>
 <fieldset><legend><span class="dot" style="background:#c2185b"></span> Refugios</legend>
 <label><input type="checkbox" class="re" value="l" checked>Libres</label>
 <label><input type="checkbox" class="re" value="g" checked>Guardados</label>
 <label><input type="checkbox" class="re" value="x">Cerrados / privados</label>
 <label><input type="checkbox" class="re" value="?" checked>Sin dato</label></fieldset>
 <details><summary>Leyenda, fuentes y licencias</summary>
-<small><b>Parkings</b>: <span class="pkb" style="background:#1565c0">P↑</span> superior (inicio, aproximación) y <span class="pkb" style="background:#2e7d32">P↓</span> inferior (salida, coche de la combinación); salen al acercar el mapa o al abrir una ficha, unidos al barranco con una línea. En la ficha (barrancos, ferratas, cuevas y refugios), «📍 Marcar parking» (en barrancos, superior o inferior): sale un marcador en tu posición GPS; si no es ahí, arrástralo con el dedo (o toca el mapa) y pulsa «✔ Confirmar» («Cancelar» para salir); después sale «↩ Deshacer». Lo marcado a mano manda sobre la fuente. Parkings, inicio y fin de barrancos: Descente-Canyon y OpenCanyon.org (CC BY-NC-SA 4.0).<br>Colores — barrancos por compromiso: I–II verde, III azul, IV rojo, V morado, VI negro. Ferratas: K1–K2 verde, K3 azul, K4 rojo, K5 morado, K6 negro, sin K gris. Pernocta: icono de furgoneta coloreado por CALIDAD: 1 punto por agua, vaciado, electricidad y aseos según la fuente + 1 si es gratis → 4–5 verde, 3 azul, 2 rojo, 1 morado, 0 negro (o sin datos); el tipo (área AC, camping, natural) sigue en el filtro y en la ficha. Cuevas: gris oscuro (ficha con «📐 Topografía» y «🥾 Acceso / GPX» cuando hay: solo enlaces a la web de origen; TODAS las que se encuentran aunque se repitan, Espeleoclub Viana primero y después Matienzo Caves Project, catálogo de Navarra (IDENA), Karstexplo (Alto Asón) y G.E.C.; solo cuevas de fuentes espeleológicas: las de OpenStreetMap sin fuente están ocultas). Refugios: magenta.<br><b>Otros mapas de pernocta (solo enlace; su autor no permite descargarlos)</b>: <a href="https://www.google.com/maps/d/viewer?mid=1ILN1xN19tqlpMTOK8KVzivgIFnp4ibM" target="_blank" rel="noopener">Áreas gratis y de pago</a> · <a href="https://www.google.com/maps/d/viewer?mid=1efLssE1fkiB7vaNZHRTH2VCWlEngho8" target="_blank" rel="noopener">Camper España para dormir</a>.</small>
-<p><small id="lic"></small></p><p><small><a href="condiciones.html" target="_blank" rel="noopener"><b>Condiciones de uso</b></a> — usar el mapa o enviar una aportación supone aceptarlas.</small></p></details>
-</div><div id="map"></div></div>
+<small><b>Parkings</b>: <span class="pkb" style="background:#1565c0">P↑</span> superior (inicio, aproximación) y <span class="pkb" style="background:#2e7d32">P↓</span> inferior (salida, coche de la combinación); salen al acercar el mapa o al abrir una ficha, unidos al barranco con una línea. En la ficha (barrancos, ferratas, cuevas y refugios), «📍 Marcar parking» (en barrancos, superior o inferior): sale un marcador en tu posición GPS; si no es ahí, arrástralo con el dedo (o toca el mapa) y pulsa «✔ Confirmar» («Cancelar» para salir); después sale «↩ Deshacer». Lo marcado a mano manda sobre la fuente. Parkings, inicio y fin de barrancos: Descente-Canyon y OpenCanyon.org (CC BY-NC-SA 4.0).<br>Colores — barrancos por compromiso: I–II verde, III azul, IV rojo, V morado, VI negro. Ferratas: K1–K2 verde, K3 azul, K4 rojo, K5 morado, K6 negro, sin K gris. Pernocta: icono de furgoneta coloreado por CALIDAD: 1 punto por agua, vaciado, electricidad y aseos según la fuente + 1 si es gratis → 4–5 verde, 3 azul, 2 rojo, 1 morado, 0 negro (o sin datos); el tipo (área AC, camping, natural) sigue en el filtro y en la ficha. Cuevas: gris oscuro (ficha con «📐 Topografía» y «🥾 Acceso / GPX» cuando hay: solo enlaces a la web de origen; TODAS las que se encuentran aunque se repitan, Espeleoclub Viana primero y después Matienzo Caves Project, catálogo de Navarra (IDENA), Karstexplo (Alto Asón) y G.E.C.; solo cuevas de fuentes espeleológicas: las de OpenStreetMap sin fuente están ocultas). Refugios: magenta. <b>Agua</b> (capa aparte): fuentes potables azul, grifos azul claro, llenado de depósito azul oscuro, manantiales potables verde azulado y sin confirmar verde agua claro; <b>vaciado furgo/AC</b>: marrón. La ficha se abre en un panel (arriba a la derecha; en el móvil, abajo) y solo se cierra con ✕ o Esc; ◎ centra el mapa en el punto. Abajo a la izquierda, tres vistas: ◧ mapa y filtros, ⛶ solo mapa (pantalla completa), ☰ solo filtros.<br><b>Otros mapas de pernocta (solo enlace; su autor no permite descargarlos)</b>: <a href="https://www.google.com/maps/d/viewer?mid=1ILN1xN19tqlpMTOK8KVzivgIFnp4ibM" target="_blank" rel="noopener">Áreas gratis y de pago</a> · <a href="https://www.google.com/maps/d/viewer?mid=1efLssE1fkiB7vaNZHRTH2VCWlEngho8" target="_blank" rel="noopener">Camper España para dormir</a>.</small>
+<p><small id="lic"></small></p><p><small id="licX"></small></p><p><small><a href="condiciones.html" target="_blank" rel="noopener"><b>Condiciones de uso</b></a> — usar el mapa o enviar una aportación supone aceptarlas.</small></p></details>
+</div><div id="map"></div>
+<div id="ficha" hidden role="dialog" aria-label="Ficha del punto"><div class="fcab"><button id="fichaCen" type="button" title="Centrar el mapa en este punto" aria-label="Centrar">◎</button><button id="fichaX" type="button" title="Cerrar (Esc)" aria-label="Cerrar">✕</button></div><div id="fichaC0"></div></div></div>
 <script src="vendor/leaflet.min.js"></script>
 <script src="vendor/leaflet.markercluster.min.js"></script>
 <script src="vendor/protomaps-leaflet.js"></script>
