@@ -40,16 +40,24 @@ button.pri{background:var(--acc);color:#fff;border-color:transparent}
 .pk span,.pkb{display:inline-block;color:#fff;font:700 11px/18px system-ui;padding:0 5px;border-radius:5px;border:1px solid #fff;box-shadow:0 1px 3px #0006;white-space:nowrap}
 .pks{margin:6px 0;padding:6px;border:1px solid var(--line);border-radius:6px}.pkr{margin:0 0 5px}
 .fts{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0 4px}.ft{display:inline-block;padding:4px 9px;border-radius:14px;border:1px solid #1f6b47;background:#e8f3ec;color:#1f6b47!important;text-decoration:none;font-size:13px;font-weight:600;line-height:1.3}.ft.wl{background:#1f6b47;color:#fff!important}.ft.tp{border-color:#6d4c41;background:#f3ebe7;color:#5d4037!important}
-#marca{position:absolute;z-index:1001;left:50%;transform:translateX(-50%);top:10px;max-width:92%;background:#fff8e1;color:#4a3500;border:2px solid #f0a64a;border-radius:8px;padding:8px 10px;box-shadow:0 2px 8px #0005;font-size:14px}
+#marca{position:absolute;z-index:1060;left:50%;transform:translateX(-50%);top:10px;max-width:92%;background:#fff8e1;color:#4a3500;border:2px solid #f0a64a;border-radius:8px;padding:8px 10px;box-shadow:0 2px 8px #0005;font-size:14px}
 #marca button{margin:0 0 0 8px}.pkbt{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0}.pkbt button{font-size:14px;padding:7px 9px;border-radius:7px;border:1px solid #1565c0;background:#e3f2fd;color:#0d47a1;cursor:pointer}
 details{margin:8px 0}summary{cursor:pointer;font-weight:600}
 .leaflet-control-layers-toggle{background-image:none!important;display:flex!important;align-items:center;justify-content:center;font-size:20px;text-decoration:none}.leaflet-control-layers-toggle::after{content:"🗺"}
 button.gratis{display:block;width:100%;margin:6px 0;font-size:15px;font-weight:600;padding:9px 10px;border:2px solid #2e7d32;color:#2e7d32;background:var(--bg);border-radius:8px}button.gratis[aria-pressed="true"]{background:#2e7d32;color:#fff}
-.van{background:none;border:0}.van svg{filter:drop-shadow(0 1px 1px #0008)}</style></head><body>
+/* E-094: buscador general */.busca{position:relative;width:min(360px,calc(100vw - 80px));margin-left:6px!important}.bcaja{display:flex;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:22px;box-shadow:0 2px 8px #0005;padding:0 4px 0 10px}
+.blupa{font-size:16px;opacity:.8}.busca input[type=search]{flex:1;border:0;background:transparent;padding:9px 8px;font-size:15px;color:var(--fg);outline:none;min-width:0}.busca input::-webkit-search-cancel-button{display:none}
+#bx{margin:0;border:0;background:transparent;padding:6px 8px;font-size:15px;color:var(--fg)}
+#bres{margin-top:4px;max-height:min(60vh,420px);overflow:auto;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:10px;box-shadow:0 4px 14px #0006}
+.bres{display:flex;gap:8px;align-items:center;padding:7px 10px;cursor:pointer;border-bottom:1px solid var(--line)}.bres:last-child{border-bottom:0}.bres:hover,.bres.act{background:var(--bg)}
+.bico{flex:none;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;font-size:15px;border:2px solid #fff;box-shadow:0 1px 3px #0006}
+.btx{display:flex;flex-direction:column;min-width:0}.btx b,.btx small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bnada{padding:8px 10px}#map.busca-on .leaflet-top.leaflet-left{z-index:1070}
+.van{background:none;border:0}.van svg{filter:drop-shadow(0 1px 1px #0008)}
+/* E-079: propuestas */#propD{position:fixed;inset:0;z-index:1200;background:#0007;display:flex;align-items:center;justify-content:center;padding:12px}#propD[hidden]{display:none}#propD .pcaja{background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:12px;width:min(440px,100%);max-height:calc(100% - 24px);display:flex;flex-direction:column;box-shadow:0 6px 24px #0008}#propD .fcab{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line)}#propD .fcab button{margin:0;padding:5px 10px;font-size:16px;line-height:1}#propC{overflow:auto;overscroll-behavior:contain;padding:8px 12px 12px}#propC fieldset{border:1px solid var(--line);border-radius:8px;margin:8px 0;padding:6px 8px}#propC fieldset label{display:inline-block;margin:2px 10px 2px 0;white-space:nowrap}#propC .pbl{display:block;margin:8px 0}#propC .pbl input,#propC .pbl textarea{display:block;width:100%;box-sizing:border-box;margin-top:3px;font:inherit;padding:6px;border:1px solid var(--line);border-radius:6px;background:var(--bg,transparent);color:inherit}#propC .trampa{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}#propC .pbts{display:flex;gap:8px;flex-wrap:wrap}#propC .pnota{background:#e08a0022;border-radius:6px;padding:6px}#propC .ptab{width:100%;border-collapse:collapse;table-layout:fixed}#propC .ptab td{border-bottom:1px solid var(--line);padding:3px 4px;vertical-align:top;overflow-wrap:anywhere}#propC .ptab td:first-child{width:9em;opacity:.8}#miniMapa{height:190px;border-radius:8px;margin:10px 0;border:1px solid var(--line)}#misProps{padding-left:18px;margin:4px 0}#misProps li{margin:3px 0}</style></head><body>
 <div id="marca" hidden><span id="marcaTxt"></span><button id="marcaX" type="button">Cancelar</button></div>
 <div id="modos" role="group" aria-label="Vista"><button type="button" data-m="normal" aria-pressed="true" title="Mapa y filtros" aria-label="Mapa y filtros">◧</button><button type="button" data-m="mapa" aria-pressed="false" title="Solo mapa (pantalla completa)" aria-label="Solo mapa">⛶</button><button type="button" data-m="filtros" aria-pressed="false" title="Solo filtros" aria-label="Solo filtros">☰</button></div>
 <div id="app"><div id="side">
-<h1>Mapa de actividades <small>v1.46</small></h1>
+<h1>Mapa de actividades <small>v1.48</small></h1>
 <div id="fuente"><small>Cargando datos…</small></div>
 <div id="estado"></div>
 <input id="q" type="search" placeholder="Buscar nombre o zona…" style="margin-top:8px">
@@ -66,6 +74,8 @@ button.gratis{display:block;width:100%;margin:6px 0;font-size:15px;font-weight:6
 <div id="cerca" style="max-height:220px;overflow:auto;font-size:.9em"></div></div>
 <button id="btnZona" type="button">⬇ Guardar zona sin cobertura</button>
 <button id="btnBase" type="button">🗺 Mapa base de España sin cobertura</button>
+<button id="btnPropP" type="button" class="pri">＋ Proponer sitio de pernocta</button>
+<details id="misPropsD"><summary>📤 Mis propuestas<span id="misPropsN"></span></summary><ul id="misProps"></ul><small>Se envían sin datos personales y se revisan antes de publicarse. Para proponer un parking: abre la ficha de un barranco, cueva o ferrata y pulsa «📍 Marcar».</small></details>
 <button id="btnExp" type="button">⬇ Exportar mis parkings (CSV)</button>
 <button id="btnInst" type="button" class="pri" hidden>Instalar</button>
 </div>
@@ -118,6 +128,7 @@ button.gratis{display:block;width:100%;margin:6px 0;font-size:15px;font-weight:6
 <p><small id="lic"></small></p><p><small id="licX"></small></p><p><small><a href="condiciones.html" target="_blank" rel="noopener"><b>Condiciones de uso</b></a> — usar el mapa o enviar una aportación supone aceptarlas.</small></p></details>
 </div><div id="map"></div>
 <div id="ficha" hidden role="dialog" aria-label="Ficha del punto"><div class="fcab"><button id="fichaCen" type="button" title="Centrar el mapa en este punto" aria-label="Centrar">◎</button><button id="fichaX" type="button" title="Cerrar (Esc)" aria-label="Cerrar">✕</button></div><div id="fichaC0"></div></div></div>
+<div id="propD" hidden role="dialog" aria-modal="true" aria-labelledby="propT"><div class="pcaja"><div class="fcab"><b id="propT"></b><button id="propX" type="button" aria-label="Cerrar">✕</button></div><div id="propC"></div></div></div>
 <script src="vendor/leaflet.min.js"></script>
 <script src="vendor/leaflet.markercluster.min.js"></script>
 <script src="vendor/protomaps-leaflet.js"></script>

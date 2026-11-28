@@ -1,3 +1,5 @@
+// Mapa de actividades v1.48 (2026-11-28, E-079: PROPUESTAS de los usuarios sin datos personales —parking de barrancos, cuevas y ferratas (inicio y fin), sitio de pernocta nuevo o corrección de uno a < 100 m con tipo, pago, servicios y descripción—, recuadro de confirmación con resumen y minimapa, envío a un Google Form con campo trampa, límite por dispositivo y cola sin cobertura, «Mis propuestas»; E-073: tabla v44 con gratis/pago de 51 áreas AC de las tandas 1–12).
+// Mapa de actividades v1.47 (2026-11-28, E-092: 9 sitios de pernocta de Park4Night aprobados por Rafael en la tabla v43 —solo nombre, coordenadas y enlace; gratis/pago sin dato—; E-094: BUSCADOR GENERAL siempre visible encima del mapa —lupa arriba, también en «solo mapa»—, sin tildes ni mayúsculas y con erratas; sugerencias con icono y color del tipo; elegir = centrar y abrir la ficha; un pueblo = centrar allí y enseñar lo cercano; sin servicios externos).
 // Mapa de actividades v1.46 (2026-11-28, E-093: fallos hallados probando en el realme — 235 barrancos SIN GRADO no se veían nunca (casilla «Sin dato» en Compromiso); el contador ya no pone «0» de una capa apagada; el service worker ya no borra al actualizarse la copia sin cobertura guardada por «Guardar zona» y por las capas de agua/servicios).
 // Mapa de actividades v1.45 (2026-11-28, E-073: capas aparte de AGUA y de SERVICIOS furgo/AC de OpenStreetMap en capas.json —se descargan al encenderlas—; los 46 puntos de servicio salen de la pernocta (tabla v42); E-087: la ficha va en un panel propio y ya no se cierra sola; E-088: tres vistas —mapa y filtros, solo mapa, solo filtros—).
 // Mapa de actividades v1.44 (2026-11-27, E-077: sin LEEME publicado, página de condiciones de uso, meta noai; código y datos iguales que la v1.43).
@@ -97,7 +99,7 @@ async function cargar() {
   $('lic').textContent = info.licencias || '';
   const conV = P.filter(p => p.t === 'b' && p.V != null).length, conT = P.filter(p => p.t === 'b' && p.tr != null).length;
   $('notaB').textContent = `Con V/A: ${conV} de ${n.b}; con tiempos: ${conT}. Graduación, compromiso y tiempos de Descente-Canyon (CC BY-NC-SA) donde existen; en el resto, el compromiso es provisional (dificultad de Infobarrancos).`;
-  aplicaMios(); rellenaCC(); construir(); aplicar();
+  aplicaMios(); rellenaCC(); construir(); indiceBusca(); aplicar();   // E-094: índice del buscador
 }
 // ---------- desplegables de comunidad/país y provincia ----------
 const ord = (x, y) => x.localeCompare(y, 'es');
@@ -129,6 +131,7 @@ function ficha(p) {
   
   ${p.t === 'b' || p.t === 'f' ? ` · <a href="https://www.google.com/search?q=${encodeURIComponent('site:wikiloc.com ' + (p.n || '') + ' ' + (p.pr || ''))}" target="_blank" rel="noopener">${wikilocs(p).length ? 'Otras rutas en Wikiloc' : 'Buscar en Wikiloc'}</a>` : ''}
   ${p.t === 'b' || p.t === 'f' || p.t === 'r' ? '' : ` · <a href="https://www.google.com/maps/dir/?api=1&destination=${p.la},${p.lo}" target="_blank" rel="noopener">Cómo llegar</a>`}
+  ${p.t === 'p' ? ` · <a href="#" onclick="corrigePernocta('${esc(p.id)}');return false">✏ Proponer corrección de este sitio</a>` : ''}
   · <a href="#" onclick="alrededor(${p.la},${p.lo},'${esc(p.n || 'este punto').replace(/'/g, '')}');return false">Buscar alrededor</a></div>`;
 }
 
@@ -138,7 +141,7 @@ const FU_NOM = [[/infobarrancos/i, 'Infobarrancos'], [/descente-canyon/i, 'Desce
   [/navarra\.es/i, 'IDENA Navarra'], [/rediam|juntadeandalucia/i, 'Junta de Andalucía'], [/wikidata/i, 'Wikidata'], [/wikipedia/i, 'Wikipedia'],
   [/commons\.wikimedia/i, 'Wikimedia Commons'], [/camptocamp/i, 'Camptocamp'], [/openstreetmap/i, 'OpenStreetMap'], [/google\.com\/maps\/d\//i, 'Mapa de origen (My Maps)'],
   [/drive\.google/i, 'Drive'], [/visor\.gva|dogv\.gva/i, 'Generalitat Valenciana'], [/feec\.cat/i, 'FEEC'], [/tenerifeon|tenerife\.es/i, 'Cabildo de Tenerife'],
-  [/saih|chtajo|chebro/i, 'Caudales (SAIH)'], [/xunta|turismo\.gal/i, 'Xunta / Turismo de Galicia'], [/aragon\.es/i, 'Gobierno de Aragón'], [/campaments\.cat|catalunya\.com/i, 'Turisme de Catalunya']];
+  [/saih|chtajo|chebro/i, 'Caudales (SAIH)'], [/xunta|turismo\.gal/i, 'Xunta / Turismo de Galicia'], [/aragon\.es/i, 'Gobierno de Aragón'], [/campaments\.cat|catalunya\.com/i, 'Turisme de Catalunya'], [/park4night/i, 'Park4Night']];
 function fuNombre(u) { for (const [re, n] of FU_NOM) if (re.test(u)) return n;
   try { const h = new URL(u).hostname.replace(/^www\./, '').split('.'); const s = h.length > 2 ? h[h.length - 3] : h[0]; return s.charAt(0).toUpperCase() + s.slice(1); } catch (e) { return 'Enlace'; } }
 const urlsDe = v => (String(v || '').match(/https?:\/\/[^\s|;‖]+/g) || []).map(u => u.replace(/[).,]+$/, ''));
@@ -179,9 +182,10 @@ const ir = (la, lo) => `https://www.google.com/maps/dir/?api=1&destination=${la}
 function origen(fu) { const u = (String(fu).match(/https?:\/\/\S+/) || [''])[0]; const t = String(fu).replace(/\s*·?\s*https?:\/\/\S+/, '');
   return esc(t || 'sin dato') + (u ? ` · <a href="${esc(u)}" target="_blank" rel="noopener">ver ficha</a>` : ''); }
 function fichaParkings(p) {
-  const comb = p.comb.startsWith('s'), kinds = p.t === 'b' ? ['s', 'i'] : ['s'];
-  const fila = k => { const x = p[k === 's' ? 'ps' : 'pi'], nom = p.t === 'b' ? PK[k].t : (p.t === 'r' || p.t === 'c') ? 'Parking / inicio a pie' : 'Parking';
-    const marca = `<br><span class="pkbt"><button type="button" onclick="marcaParking('${esc(p.id)}','${k}')">📍 ${x ? 'Corregir' : 'Marcar'} ${p.t === 'b' ? PK[k].t.toLowerCase() : 'parking'}</button></span>` + (MIOS[p.id] && MIOS[p.id][k] ? ` <a href="#" onclick="quitaParking('${esc(p.id)}','${k}');return false">Quitar el mío</a>` : '');
+  const comb = p.comb.startsWith('s'), kinds = p.t === 'b' || p.t === 'f' ? ['s', 'i'] : ['s'];   // E-079 (v1.48): ferratas con parking de inicio y de fin
+  const fila = k => { const x = p[k === 's' ? 'ps' : 'pi'], nom = p.t === 'b' ? PK[k].t : (p.t === 'r' || p.t === 'c') ? 'Parking / inicio a pie' : p.t === 'f' ? (k === 's' ? 'Parking de inicio' : 'Parking de fin') : 'Parking';
+    const marca = `<br><span class="pkbt"><button type="button" onclick="marcaParking('${esc(p.id)}','${k}')">📍 ${x ? 'Corregir' : 'Marcar'} ${nomPk(p, k)}</button></span>` + (MIOS[p.id] && MIOS[p.id][k] ? (yaPropuesto(p.id, k) ? ' <small>📤 propuesto</small>' : ` <button type="button" onclick="proponParking('${esc(p.id)}','${k}')">📤 Enviar propuesta</button>`) + ` <a href="#" onclick="quitaParking('${esc(p.id)}','${k}');return false">Quitar el mío</a>` : '');
+    if (!x && k === 'i' && p.t === 'f') return `<div class="pkr"><span class="pkb" style="background:${PK[k].col}">${PK[k].ic}</span> <b>${nom}</b> <small>(solo si es distinto del de inicio)</small> · ${marca}</div>`;
     if (!x) return (k === 'i' && !comb && p.t === 'b' && !p.pi) ? `<div class="pkr"><span class="pkb" style="background:${PK[k].col}">${PK[k].ic}</span> <b>${nom}</b>: ${p.comb ? 'no hace falta (sin combinación)' : 'sin dato'} · ${marca}</div>`
       : `<div class="pkr"><span class="pkb" style="background:${PK[k].col}">${PK[k].ic}</span> <b>${nom}</b> <small>(${PK[k].sub})</small>: sin verificar — mira la reseña o Wikiloc · ${marca}</div>`;
     return `<div class="pkr"><span class="pkb" style="background:${PK[k].col}">${PK[k].ic}</span> <b>${nom}</b> <small>(${PK[k].sub})</small><br><a href="${ir(x.la, x.lo)}" target="_blank" rel="noopener">🚗 Cómo llegar a este parking</a> · ${marca}<br><small>Origen: ${origen(x.fu)}</small></div>`; };
@@ -372,6 +376,7 @@ $('btnZona').onclick = async () => {
     if (i % 20 === 0) estado(`Guardando mapa: ${i}/${lista.length}…`); }
   const dc = await caches.open('datos-v1'); try { const r = await fetch(DATOS_URL, {cache: 'no-cache'}); if (r.ok) await dc.put(DATOS_URL, r); } catch (e) {}
   if (X.length) try { const r = await fetch(CAPAS_URL, {cache: 'no-cache'}); if (r.ok) await dc.put(CAPAS_URL, r); } catch (e) {}   // E-073
+  try { const r = await fetch(LUG_URL, {cache: 'no-cache'}); if (r.ok) await dc.put(LUG_URL, r); } catch (e) {}   // E-094: pueblos del buscador
   estado(`Zona guardada para usar sin cobertura: ${ok} teselas (zoom ${z0}–${Math.min(15, z0 + 3)}) y los puntos.`);
 };
 
@@ -430,16 +435,16 @@ window.marcaParking = (id, k) => {
 window.confirmaPk = () => { if (!MARCANDO || !MKPK) return; const {id, k} = MARCANDO, ll = MKPK.getLatLng(); MARCANDO = null; quitaMk(); guardaPk(id, k, ll.lat, ll.lng, ''); };
 $('marcaX').onclick = () => { MARCANDO = null; quitaMk(); DESHACER = null; avisoMarca(''); $('marcaX').textContent = 'Cancelar'; };
 // v1.25 (E-067): guardar con «↩ Deshacer».
-const nomPk = (p, k) => p.t === 'b' ? PK[k].t.toLowerCase() : 'parking';
+const nomPk = (p, k) => p.t === 'b' ? PK[k].t.toLowerCase() : p.t === 'f' ? (k === 's' ? 'parking de inicio' : 'parking de fin') : 'parking';
 let DESHACER = null;
 function guardaPk(id, k, la, lo, como) {
   const p = P.find(x => x.id === id); if (!p) return;
   DESHACER = {id, k, antes: MIOS[id] && MIOS[id][k] ? {...MIOS[id][k]} : null};
   MIOS[id] = MIOS[id] || {n: p.n}; MIOS[id][k] = {la: +(+la).toFixed(6), lo: +(+lo).toFixed(6), f: new Date().toISOString()};
   guardaMios(); rehaz();
-  avisoMarca(`✅ Guardado el <b>${nomPk(p, k)}</b> de «${esc(p.n)}» (en este móvil). <button type="button" onclick="deshacerPk()">↩ Deshacer</button>`);
+  avisoMarca(`✅ Guardado el <b>${nomPk(p, k)}</b> de «${esc(p.n)}» (en este móvil). <button type="button" onclick="proponParking('${esc(id)}','${k}')">📤 Enviar propuesta</button> <button type="button" onclick="deshacerPk()">↩ Deshacer</button>`);
   $('marcaX').textContent = 'Cerrar';
-  estado('Para que llegue a todos: «Exportar mis parkings».');
+  estado('Para que llegue a todos: «📤 Enviar propuesta» (se revisa antes de publicarse).');
   fichaDe(p);   // E-087: vuelve a abrir su ficha (panel propio)
 }
 window.deshacerPk = () => { if (!DESHACER) return; const {id, k, antes} = DESHACER; DESHACER = null;
@@ -477,6 +482,130 @@ document.querySelectorAll('#modos button').forEach(b => b.addEventListener('clic
 document.addEventListener('fullscreenchange', () => setTimeout(() => map.invalidateSize(), 80));
 { let v = 'normal'; try { v = localStorage.getItem(VISTA_KEY) || 'normal'; } catch (e) {} ponModo(v, false); }
 
+// ---------- E-094 (v1.47): BUSCADOR GENERAL siempre visible encima del mapa (también en «solo mapa») ----------
+// Busca en nombre, zona (río, sierra…), municipio, provincia y comunidad; sin tildes ni mayúsculas y con erratas (1 letra en palabras de
+// 4–6, 2 en las de 7 o más). Sugerencias con el icono y el color del tipo; al elegir: centra el mapa y abre la ficha. Si se busca un
+// PUEBLO (municipios sacados de la columna «zona» de los propios datos, sin servicios externos: funciona sin cobertura), centra el
+// mapa allí y enseña lo cercano con «Buscar alrededor» (25 km). Agua y vaciados entran solo si su capa está encendida.
+const fold = s => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9ñ]+/g, ' ').trim();
+const BICO = {b: '🏞', f: '🧗', c: '🕳', p: '🚐', r: '🏠', a: '💧', v: '🚽', l: '📍'};
+const BNOM = {b: 'Barranco', f: 'Ferrata', c: 'Cueva', p: 'Pernocta', r: 'Refugio', a: 'Agua', v: 'Vaciado', l: 'Pueblo / lugar'};
+let BI = [], BL = [];   // BI: índice de actividades; BL: lugares (municipios) con su centro
+function muniDe(z) { const s = String(z || '').split(/\s*[,(]\s*/)[0].trim(); return s.length >= 3 ? s : ''; }
+function indiceBusca() {
+  BI = P.map((p, i) => { const n = fold(p.n), r = fold([p.z, p.pr, p.cc].join(' ')); return {i, n, r, w: (n + ' ' + r).split(' ').filter(Boolean)}; });
+  const g = {}; P.forEach(p => { const m = muniDe(p.z); if (!m || String(p.pr).split('/').concat(p.cc).some(x => fold(x) === fold(m))) return;   // la provincia o la comunidad no son un pueblo
+    const k = fold(m) + '|' + fold(p.pr); const x = g[k] || (g[k] = {m, pr: p.pr, cc: p.cc, la: 0, lo: 0, n: 0}); x.la += p.la; x.lo += p.lo; x.n++; });
+  BL = Object.values(g).map(x => ({m: x.m, pr: x.pr, cc: x.cc, la: x.la / x.n, lo: x.lo / x.n, n: x.n, f: fold(x.m), w: fold(x.m).split(' ')}));
+  if (LUG.length) unirLugares();
+}
+// Pueblos y ciudades de España de OpenStreetMap (lugares.json, ~0,3 MB, se baja al tocar el buscador y queda guardado sin cobertura).
+const LUG_URL = 'lugares.json'; let LUG = [], LUGCARGA = null;
+function cargaLugares() {
+  if (LUGCARGA) return LUGCARGA;
+  LUGCARGA = (async () => { let txt;
+    try { const r = await fetch(LUG_URL, {cache: 'no-cache'}); if (!r.ok) throw new Error(r.status); txt = await r.clone().text();
+      if ('caches' in window) caches.open('datos-v1').then(c => c.put(LUG_URL, r)).catch(() => {}); }
+    catch (e) { const c = await caches.match(LUG_URL).catch(() => null) || await caches.match(new URL(LUG_URL, location.href).href).catch(() => null);
+      if (!c) { LUGCARGA = null; return false; } txt = await c.text(); }
+    LUG = JSON.parse(txt).rows; if (BI.length) unirLugares(); return true; })();
+  return LUGCARGA;
+}
+function unirLugares() {   // los de OSM mandan; de los sacados de «zona» se quitan los que ya están (mismo nombre a < 60 km)
+  const osm = LUG.map(r => ({m: r[2], la: r[0], lo: r[1], n: 0, osm: r[3], f: fold(r[2]), w: fold(r[2]).split(' ')}));
+  const porNom = {}; osm.forEach(o => (porNom[o.f] = porNom[o.f] || []).push(o));
+  BL = BL.filter(l => !l.osm && !(porNom[l.f] || []).some(o => distKm(o.la, o.lo, l.la, l.lo) < 60)).concat(osm);
+}
+function provCerca(l) { if (l.pr) return l.pr; let best = null, bd = 1e9;   // provincia del punto del mapa más cercano (solo para enseñarla)
+  for (const p of P) { const d = Math.abs(p.la - l.la) + Math.abs(p.lo - l.lo); if (d < bd) { bd = d; best = p; } }
+  l.pr = best ? best.pr : ''; return l.pr; }
+function lev(a, b, max) {   // distancia de edición con corte
+  if (Math.abs(a.length - b.length) > max) return max + 1;
+  let prev = Array.from({length: b.length + 1}, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) { const cur = [i]; let mn = i;
+    for (let j = 1; j <= b.length; j++) { cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); if (cur[j] < mn) mn = cur[j]; }
+    if (mn > max) return max + 1; prev = cur; }
+  return prev[b.length];
+}
+// Puntuación de una palabra buscada frente a las palabras de un elemento: 3 empieza igual, 2 la contiene, 1 con errata, 0 nada.
+function puntoPal(t, ws) { let best = 0;
+  for (const w of ws) { if (w === t) return 5; if (w.startsWith(t)) best = Math.max(best, 3); if (t.length >= 3 && w.includes(t)) best = Math.max(best, 2);
+    else if (best < 2 && t.length >= 4 && !w.startsWith(t)) { const max = t.length >= 7 ? 2 : 1, pre = w.slice(0, t.length); const d = Math.min(lev(t, pre, max), lev(t, w, max)); if (d <= max) best = Math.max(best, 1 + (max - d) * .4); } }
+  return best; }
+// Palabras vacías (no cuentan si hay otras) y palabras de TIPO («barranco vero», «cueva valporquero»): filtran por tipo, no por nombre.
+const BVAC = new Set(['de', 'del', 'la', 'las', 'el', 'los', 'y', 'd', 'l', 'en', 'a', 'al', 'o']);
+const BTIPO = {barranco: 'b', barrancos: 'b', canon: 'b', canones: 'b', barranc: 'b', cueva: 'c', cuevas: 'c', sima: 'c', simas: 'c', torca: 'c', cavidad: 'c', cova: 'c', grotte: 'c',
+  ferrata: 'f', ferratas: 'f', via: 'f', camping: 'p', area: 'p', autocaravanas: 'p', pernocta: 'p', furgo: 'p', refugio: 'r', refugios: 'r', refuge: 'r', fuente: 'a', agua: 'a', vaciado: 'v'};
+function busca(qr, lim = 12) {
+  const q = fold(qr), t0 = q.split(' ').filter(Boolean); if (!t0.length || q.length < 2) return [];
+  const ts = t0.filter(t => !BVAC.has(t)).length ? t0.filter(t => !BVAC.has(t)) : t0;
+  const tip = ts.filter(t => BTIPO[t]), nom = ts.filter(t => !BTIPO[t]).length ? ts.filter(t => !BTIPO[t]) : ts;   // solo «sima»: busca por nombre
+  const sinTipo = !tip.length || tip.length === ts.length;   // sin palabras de tipo, o solo de tipo («sima»): todo por nombre
+  const out = [];
+  for (const e of BI) { const pt = P[e.i].t; let s = 0, ok = true;
+    if (!sinTipo) { if (tip.some(t => BTIPO[t] !== pt)) continue; s += 2 * tip.length; }
+    for (const t of nom) { const v = puntoPal(t, e.w); if (!v) { ok = false; break; } s += v; }
+    if (!ok) continue; if (e.n === q) s += 20; else if (e.n.startsWith(q)) s += 10; else if (e.n.includes(q)) s += 6;
+    if (nom.every(t => e.n.split(' ').some(w => w.startsWith(t)))) s += 4;
+    out.push({s, k: 'p', i: e.i}); }
+  if (sinTipo) for (const l of BL) { let s = 0, ok = true; for (const t of nom) { const v = puntoPal(t, l.w.concat(fold(l.pr).split(' '))); if (!v) { ok = false; break; } s += v; }
+    if (!ok) continue; if (l.f === q) s += 25; else if (l.f.startsWith(q)) s += 12; out.push({s: s + (l.osm === 'c' ? 2 : l.osm === 't' ? 1 : Math.min(3, l.n / 20)), k: 'l', l}); }
+  const XS = vals('cap');
+  if (XS.size && X.length) X.forEach((x, j) => { if (!x.n || !XS.has(x.k === 'v' ? 's' : 'a')) return; const n = fold(x.n);
+    if (!sinTipo && tip.some(t => BTIPO[t] !== (x.k === 'v' ? 'v' : 'a'))) return;
+    let s = 0; for (const t of nom) { const v = puntoPal(t, n.split(' ')); if (!v) return; s += v; } out.push({s: s - 1, k: 'x', j}); });
+  // A igual puntuación, primero lo más cercano al centro del mapa (y los lugares antes que las actividades).
+  const c = map.getCenter(), ll = r => r.k === 'p' ? [P[r.i].la, P[r.i].lo] : r.k === 'l' ? [r.l.la, r.l.lo] : [X[r.j].la, X[r.j].lo];
+  out.forEach(r => { const [la, lo] = ll(r); r.d = distKm(c.lat, c.lng, la, lo); });
+  out.sort((a, b) => b.s - a.s || (b.k === 'l') - (a.k === 'l') || a.d - b.d);
+  return out.slice(0, lim);
+}
+const Bsel = {res: [], act: -1};
+function filaBusca(r, idx) {
+  let ico, col, tit, sub;
+  if (r.k === 'p') { const p = P[r.i]; ico = BICO[p.t]; col = color(p); tit = p.n || '(sin nombre)'; sub = BNOM[p.t] + ' · ' + (p.z || p.pr); }
+  else if (r.k === 'l') { ico = BICO.l; col = '#e53935'; tit = r.l.m; sub = ({c: 'Ciudad', t: 'Pueblo', v: 'Pueblo'}[r.l.osm] || 'Lugar') + ' · ' + provCerca(r.l) + ' · ver lo cercano'; }
+  else { const x = X[r.j]; ico = BICO[x.k === 'v' ? 'v' : 'a']; col = XK[x.k].c; tit = x.n; sub = XK[x.k].n + ' · ' + x.pr; }
+  return `<div class="bres${idx === Bsel.act ? ' act' : ''}" role="option" data-n="${idx}"><span class="bico" style="background:${col}">${ico}</span><span class="btx"><b>${esc(tit)}</b><small>${esc(sub)}</small></span></div>`;
+}
+function pintaBusca() {
+  const q = $('bq').value, box = $('bres');
+  Bsel.res = busca(q); if (Bsel.act >= Bsel.res.length) Bsel.act = -1;
+  $('bx').hidden = !q;
+  if (!q.trim() || fold(q).length < 2) { box.hidden = true; box.innerHTML = ''; return; }
+  box.innerHTML = Bsel.res.length ? Bsel.res.map(filaBusca).join('') : '<div class="bnada"><small>Nada con ese nombre. Prueba con el pueblo, el río o la sierra.</small></div>';
+  box.hidden = false; map.getContainer().classList.add('busca-on');
+}
+new MutationObserver(() => { if ($('bres').hidden) map.getContainer().classList.remove('busca-on'); }).observe(document.body, {subtree: true, attributes: true, attributeFilter: ['hidden']});
+function eligeBusca(n) {
+  const r = Bsel.res[n]; if (!r) return;
+  $('bres').hidden = true; $('bq').blur();
+  if ($('app').classList.contains('m-filtros')) ponModo('normal', false);
+  if (r.k === 'l') { $('bq').value = r.l.m; $('bx').hidden = false; cierraFicha(); setTimeout(() => { map.invalidateSize(); ponCentro([r.l.la, r.l.lo], 'alrededor de ' + r.l.m); }, 60); return; }
+  if (r.k === 'p') { const p = P[r.i]; $('bq').value = p.n; fichaDe(p); }
+  else { const x = X[r.j]; $('bq').value = x.n; abreFicha(fichaX(x), [x.la, x.lo], null); }
+  $('bx').hidden = false;
+  setTimeout(() => { map.invalidateSize(); map.setView(FICHA_LL, Math.max(map.getZoom(), 14)); }, 60);
+}
+const BuscaCtl = L.Control.extend({options: {position: 'topleft'}, onAdd() {
+  const d = L.DomUtil.create('div', 'busca'); d.setAttribute('role', 'search');
+  d.innerHTML = '<div class="bcaja"><span class="blupa" aria-hidden="true">🔍</span><input id="bq" type="search" autocomplete="off" enterkeyhint="search" placeholder="Buscar barranco, cueva, ferrata, pueblo…" aria-label="Buscar en el mapa" aria-controls="bres"><button id="bx" type="button" hidden aria-label="Borrar búsqueda" title="Borrar">✕</button></div><div id="bres" role="listbox" hidden></div>';
+  L.DomEvent.disableClickPropagation(d); L.DomEvent.disableScrollPropagation(d); return d; }});
+map.addControl(new BuscaCtl());
+{ let tmo = null; $('bq').addEventListener('input', () => { clearTimeout(tmo); Bsel.act = -1; tmo = setTimeout(pintaBusca, 120); }); }
+$('bq').addEventListener('focus', () => { cargaLugares().then(ok => { if (ok && $('bq').value) pintaBusca(); }); if ($('bq').value) pintaBusca(); });
+$('bq').addEventListener('keydown', e => {
+  const n = Bsel.res.length;
+  if (e.key === 'ArrowDown' && n) { e.preventDefault(); Bsel.act = (Bsel.act + 1) % n; pintaBusca(); }
+  else if (e.key === 'ArrowUp' && n) { e.preventDefault(); Bsel.act = (Bsel.act - 1 + n) % n; pintaBusca(); }
+  else if (e.key === 'Enter') { e.preventDefault(); if (!Bsel.res.length) Bsel.res = busca($('bq').value); eligeBusca(Bsel.act >= 0 ? Bsel.act : 0); }
+  else if (e.key === 'Escape') { $('bres').hidden = true; e.stopPropagation(); }
+});
+$('bres').addEventListener('pointerdown', e => e.preventDefault());   // que no pierda el foco antes del clic
+$('bres').addEventListener('click', e => { const el = e.target.closest('.bres'); if (el) eligeBusca(+el.dataset.n); });
+$('bx').onclick = () => { $('bq').value = ''; $('bx').hidden = true; $('bres').hidden = true; $('bq').focus(); };
+document.addEventListener('pointerdown', e => { if (!e.target.closest('.busca')) $('bres').hidden = true; });
+
 // ---------- instalación (PWA) ----------
 let promptInst;
 addEventListener('beforeinstallprompt', e => { e.preventDefault(); promptInst = e; $('btnInst').hidden = false; });
@@ -486,3 +615,148 @@ addEventListener('offline', () => { estado('Sin conexión: se usa lo guardado.')
 addEventListener('online', () => { estado(''); eligeBase(); });
 
 cargar();
+
+// ---------- E-079 (v1.48): PROPUESTAS DE LOS USUARIOS — parkings (barrancos, cuevas, ferratas) y sitios de pernocta ----------
+// Encargo de Rafael 2026-11-27 19:58–20:13 (chat «Programa autónomo»). Todo se envía SIN DATOS PERSONALES (ni nombre, ni correo, ni cuenta)
+// a un Google Form de canterigenopubli («Propuestas mapa», un solo campo con la propuesta en JSON) y entra PENDIENTE: nada se publica sin
+// que Rafael lo apruebe («apruebo P-xxx» / «rechazo P-xxx»). Antes de enviar, recuadro de confirmación con resumen y minimapa
+// («Enviar» / «Corregir»). Antispam: campo trampa invisible, mínimo 3 s con el formulario abierto y máximo 10 envíos al día por dispositivo
+// (un número al azar guardado en este navegador, no identifica a nadie). Sin cobertura, la propuesta queda «pendiente de envío» y se manda
+// sola al volver la conexión. Registro de lo enviado en este dispositivo: «Mis propuestas».
+const FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLScV536HoYBmnX16zdvjXRYb89ZudhUi_K6WHa14-i85tzaNeA/formResponse', FORM_CAMPO = 'entry.77776280';
+const PROP_KEY = 'e079-propuestas-v1', DISP_KEY = 'e079-dispositivo', PROP_LIM_DIA = 10, PROP_MIN_MS = 3000, CERCA_M = 100;
+const SERV = [['agua', 'Agua potable'], ['grises', 'Vaciado de grises'], ['negras', 'Vaciado de negras / WC químico'], ['luz', 'Electricidad'],
+  ['ducha', 'Ducha'], ['wc', 'WC'], ['basura', 'Basura'], ['wifi', 'Wifi'], ['cobertura', 'Cobertura 4G/5G'], ['sombra', 'Sombra'],
+  ['tranquilo', 'Tranquilo de noche'], ['grande', 'Apto furgo / autocaravana grande']];
+const TIPOS_P = [['nat', 'Natural / acampada'], ['ac', 'Área de autocaravanas'], ['cam', 'Camping'], ['parking', 'Parking']];
+const PAGOS_P = [['g', 'Gratis'], ['p', 'De pago'], ['?', 'No lo sé']];
+let PROPS = []; try { PROPS = JSON.parse(localStorage.getItem(PROP_KEY) || '[]') || []; } catch (e) { PROPS = []; }
+const guardaProps = () => { try { localStorage.setItem(PROP_KEY, JSON.stringify(PROPS.slice(-300))); } catch (e) {} pintaMisProps(); };
+function dispositivo() { let d = ''; try { d = localStorage.getItem(DISP_KEY) || ''; if (!d) { d = Math.random().toString(36).slice(2, 10); localStorage.setItem(DISP_KEY, d); } } catch (e) { d = 'sin-almacen'; } return d; }
+const PKNOM = (p, k) => p.t === 'b' ? PK[k].t : p.t === 'f' ? (k === 's' ? 'Parking de inicio' : 'Parking de fin (si es distinto)') : 'Parking / inicio a pie';
+const hoy = () => new Date().toISOString().slice(0, 10);
+const enviadasHoy = () => PROPS.filter(x => x.enviada && String(x.enviada).slice(0, 10) === hoy()).length;
+const claveProp = x => x.tipo === 'parking' ? `pk|${x.id_actividad}|${x.parking}|${x.la}|${x.lo}` : `pn|${x.la}|${x.lo}|${x.nombre}`;
+const yaPropuesto = (id, k) => { const m = MIOS[id] && MIOS[id][k]; return !!m && PROPS.some(x => x.tipo === 'parking' && x.id_actividad === id && x.k === k && x.la === m.la && x.lo === m.lo); };
+
+// --- diálogo propio (no es un popup del mapa) ---
+let MINI = null, PROP_ABIERTA = 0;
+function abreProp(titulo, html) {
+  if (MINI) { MINI.remove(); MINI = null; }
+  $('propT').textContent = titulo; $('propC').innerHTML = html; $('propD').hidden = false; $('propC').scrollTop = 0; PROP_ABIERTA = Date.now();
+}
+function cierraProp() { if (MINI) { MINI.remove(); MINI = null; } $('propD').hidden = true; $('propC').innerHTML = ''; }
+$('propX').onclick = cierraProp;
+addEventListener('keydown', e => { if (e.key === 'Escape' && !$('propD').hidden) cierraProp(); });
+
+// --- 1) PARKING: tras marcarlo («📍 Marcar/Corregir», flujo de la v1.25), «📤 Enviar propuesta» ---
+window.proponParking = (id, k) => {
+  const p = P.find(x => x.id === id), m = MIOS[id] && MIOS[id][k]; if (!p || !m) return estado('Primero marca el parking.');
+  const antes = ORIG[id] && ORIG[id][k === 's' ? 'ps' : 'pi'];
+  confirma({tipo: 'parking', id_actividad: id, tipo_actividad: ({b: 'barranco', f: 'ferrata', c: 'cueva', r: 'refugio'})[p.t] || p.t,
+    nombre_actividad: p.n, k, parking: PKNOM(p, k), la: m.la, lo: m.lo, antes: antes ? {la: antes.la, lo: antes.lo, fuente: String(antes.fu || '').slice(0, 200)} : null,
+    dist_al_punto_m: Math.round(map.distance([m.la, m.lo], [p.la, p.lo]))}, [p.la, p.lo]);
+};
+
+// --- 2) SITIO DE PERNOCTA nuevo (o corrección de uno existente si está a < 100 m) ---
+let PMK = null, PCORR = null;
+const quitaPmk = () => { if (PMK) { map.removeLayer(PMK); PMK = null; } };
+function iniciaPernocta(ini, corr) {
+  cierraFicha(); cierraProp(); quitaPmk(); if (typeof MARCANDO !== 'undefined' && MARCANDO) { MARCANDO = null; quitaMk(); }
+  PCORR = corr || null; ini = ini || map.getCenter();
+  PMK = L.marker(ini, {draggable: true, autoPan: true, zIndexOffset: 2000, icon: L.divIcon({className: 'pk', html: '<span style="background:#e08a00;font-size:15px;padding:4px 7px">🚐＋</span>', iconSize: [44, 26], iconAnchor: [22, 13]})}).addTo(map);
+  map.setView(ini, Math.max(map.getZoom(), corr ? 16 : 14));
+  avisoMarca(`🚐 ${corr ? `Corrección de «${esc(corr.n)}»: deja el marcador donde está el sitio (o muévelo)` : 'Arrastra el marcador (o toca el mapa) hasta el sitio de pernocta'}. <button type="button" onclick="sigPernocta()">✔ Siguiente</button>`);
+  $('marcaX').textContent = 'Cancelar';
+}
+window.sigPernocta = () => { if (!PMK) return; const ll = PMK.getLatLng(); quitaPmk(); avisoMarca('');
+  let cerca = PCORR, d = 0;
+  if (!cerca) { let bd = 1e9; P.forEach(p => { if (p.t !== 'p') return; const x = map.distance([p.la, p.lo], ll); if (x < bd) { bd = x; cerca = p; } }); if (bd > CERCA_M) cerca = null; d = Math.round(bd); }
+  else d = Math.round(map.distance([cerca.la, cerca.lo], ll));
+  formPernocta(ll, cerca, d); };
+map.on('click', e => { if (PMK) PMK.setLatLng(e.latlng); });
+$('marcaX').addEventListener('click', () => { quitaPmk(); PCORR = null; });
+$('btnPropP').onclick = () => iniciaPernocta(null, null);
+window.corrigePernocta = id => { const p = P.find(x => x.id === id); if (p) iniciaPernocta([p.la, p.lo], p); };
+
+function formPernocta(ll, cerca, d, previo) {
+  const v = previo || {nombre: cerca ? cerca.n : '', pernocta_tipo: cerca ? (cerca.pt || 'nat') : 'nat', pago: cerca ? cerca.pg : '?', servicios: [], descripcion: ''};
+  const sel = (n, l, val) => l.map(([k, t]) => `<label><input type="radio" name="${n}" value="${k}"${k === val ? ' checked' : ''}> ${t}</label>`).join('');
+  abreProp(cerca ? 'Corrección de un sitio de pernocta' : 'Proponer sitio de pernocta', `<form id="fPern" autocomplete="off">
+  ${cerca ? `<p class="pnota">📍 A ${d} m de «<b>${esc(cerca.n || '(sin nombre)')}</b>»: se enviará como <b>corrección de ese sitio</b>.</p>` : ''}
+  <label class="pbl">Nombre del sitio<input name="nombre" maxlength="120" value="${esc(v.nombre)}" placeholder="p. ej. Explanada junto al río"></label>
+  <fieldset><legend>Tipo</legend>${sel('pernocta_tipo', TIPOS_P, v.pernocta_tipo)}</fieldset>
+  <fieldset><legend>Pago</legend>${sel('pago', PAGOS_P, v.pago)}</fieldset>
+  <fieldset><legend>Servicios</legend>${SERV.map(([k, t]) => `<label><input type="checkbox" name="serv" value="${k}"${v.servicios.includes(k) ? ' checked' : ''}> ${t}</label>`).join('')}</fieldset>
+  <label class="pbl">Descripción (libre)<textarea name="descripcion" maxlength="1000" rows="3" placeholder="acceso, firme, ruido, normas del sitio…">${esc(v.descripcion)}</textarea></label>
+  <label class="trampa" aria-hidden="true">Web<input name="web" tabindex="-1" autocomplete="off"></label>
+  <p class="pbts"><button type="submit">Revisar y enviar →</button></p></form>`);
+  $('fPern').onsubmit = ev => { ev.preventDefault(); const f = new FormData(ev.target);
+    if (f.get('web')) { cierraProp(); return estado('Propuesta enviada.'); }   // campo trampa: un robot lo rellena; no se manda nada
+    const nombre = String(f.get('nombre') || '').trim(); if (!nombre) return estado('Pon un nombre al sitio.');
+    confirma({tipo: 'pernocta', la: +ll.lat.toFixed(6), lo: +ll.lng.toFixed(6), nombre, pernocta_tipo: f.get('pernocta_tipo'), pago: f.get('pago'),
+      servicios: f.getAll('serv'), descripcion: String(f.get('descripcion') || '').trim().slice(0, 1000),
+      correccion_de: cerca ? cerca.id : null, nombre_existente: cerca ? cerca.n : null, dist_al_existente_m: cerca ? d : null}, cerca ? [cerca.la, cerca.lo] : null); };
+}
+
+// --- 3) RECUADRO DE CONFIRMACIÓN: resumen esquemático + minimapa; «Enviar» / «Corregir» ---
+function confirma(x, otro) {
+  const T = x.tipo === 'parking'
+    ? [['Qué', `${x.parking} de ${x.tipo_actividad}`], ['Actividad', x.nombre_actividad], ['Coordenadas', `${x.la}, ${x.lo}`],
+       ['Distancia al punto del mapa', x.dist_al_punto_m >= 1000 ? (x.dist_al_punto_m / 1000).toFixed(1) + ' km' : x.dist_al_punto_m + ' m'],
+       ['Parking que había', x.antes ? `${x.antes.la}, ${x.antes.lo}` : 'ninguno']]
+    : [['Qué', x.correccion_de ? `Corrección de «${x.nombre_existente}»` : 'Sitio de pernocta nuevo'], ['Nombre', x.nombre],
+       ['Tipo', (TIPOS_P.find(t => t[0] === x.pernocta_tipo) || ['', '?'])[1]], ['Pago', (PAGOS_P.find(t => t[0] === x.pago) || ['', 'No lo sé'])[1]],
+       ['Servicios', x.servicios.length ? x.servicios.map(s => SERV.find(t => t[0] === s)[1]).join(', ') : 'ninguno marcado'],
+       ['Descripción', x.descripcion || '—'], ['Coordenadas', `${x.la}, ${x.lo}`]];
+  abreProp('Revisa antes de enviar', `<table class="ptab">${T.map(r => `<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td></tr>`).join('')}</table>
+  <div id="miniMapa"></div>
+  <p class="pbts"><button type="button" id="pEnv">📤 Enviar</button> <button type="button" id="pCor">✏ Corregir</button></p>
+  <p><small>Al enviar aceptas las <a href="condiciones.html" target="_blank" rel="noopener">condiciones de uso</a>. No se envía ningún dato personal; la propuesta queda pendiente hasta que se revise.</small></p>`);
+  setTimeout(() => { if ($('propD').hidden || !$('miniMapa')) return;
+    MINI = L.map('miniMapa', {zoomControl: false, attributionControl: false, dragging: true}).setView([x.la, x.lo], 16);
+    L.tileLayer(TILE, {maxZoom: 18}).addTo(MINI);
+    if (base && !navigator.onLine) baseGuardada().then(ok => { if (ok && MINI) protomapsL.leafletLayer({url: BASE_URL, flavor: oscuro ? 'dark' : 'light', lang: 'es', maxDataZoom: 9, maxZoom: 18}).addTo(MINI).bringToBack(); });   // sin cobertura: mapa base propio si está guardado
+    L.circleMarker([x.la, x.lo], {radius: 9, color: '#ff1744', weight: 3, fillColor: '#ffeb3b', fillOpacity: .9}).addTo(MINI);
+    if (otro) { L.circleMarker(otro, {radius: 6, color: '#0008', weight: 1, fillColor: '#2f6fd0', fillOpacity: .9}).addTo(MINI);
+      L.polyline([otro, [x.la, x.lo]], {color: '#2f6fd0', dashArray: '4 6', weight: 2}).addTo(MINI);
+      MINI.fitBounds(L.latLngBounds([otro, [x.la, x.lo]]).pad(.4), {maxZoom: 17}); } }, 60);
+  $('pCor').onclick = () => { if (x.tipo === 'parking') { cierraProp(); marcaParking(x.id_actividad, x.k); }
+    else { const c = x.correccion_de ? P.find(p => p.id === x.correccion_de) : null; formPernocta({lat: x.la, lng: x.lo}, c, x.dist_al_existente_m || 0, x); } };
+  $('pEnv').onclick = () => envia(x);
+}
+
+// --- 4) ENVÍO (con cola sin cobertura) ---
+async function envia(x) {
+  if (Date.now() - PROP_ABIERTA < PROP_MIN_MS) return estado('Revisa el resumen un momento antes de enviar.');
+  if (enviadasHoy() >= PROP_LIM_DIA) return estado(`Máximo ${PROP_LIM_DIA} propuestas al día desde este dispositivo. Prueba mañana.`);
+  const r = Object.assign({v: 1, app: 'v1.48', fecha: new Date().toISOString(), disp: dispositivo()}, x);
+  if (PROPS.some(y => claveProp(y) === claveProp(r))) { cierraProp(); return estado('Esa propuesta ya estaba enviada o en cola.'); }
+  PROPS.push(r); guardaProps(); cierraProp();
+  await mandaPendientes();
+  const y = PROPS[PROPS.length - 1];
+  avisoMarca(y.enviada ? '✅ Propuesta enviada. Queda pendiente de revisión; si se aprueba, saldrá en una versión próxima del mapa.' : '📴 Sin conexión: la propuesta queda guardada y se enviará sola al volver la cobertura.');
+  $('marcaX').textContent = 'Cerrar';
+  if (x.tipo === 'parking') verFicha(x.id_actividad);
+}
+let MANDANDO = false;
+async function mandaPendientes() {
+  if (MANDANDO || !navigator.onLine) return; MANDANDO = true;
+  try { for (const x of PROPS.filter(y => !y.enviada)) {
+    if (enviadasHoy() >= PROP_LIM_DIA) break;
+    const {enviada, ...datos} = x;
+    try { await fetch(FORM_URL, {method: 'POST', mode: 'no-cors', body: new URLSearchParams({[FORM_CAMPO]: JSON.stringify(datos)})});
+      x.enviada = new Date().toISOString(); guardaProps(); } catch (e) { break; } } }
+  finally { MANDANDO = false; }
+}
+addEventListener('online', mandaPendientes);
+setTimeout(mandaPendientes, 4000);
+
+// --- 5) «Mis propuestas» (registro en este dispositivo) ---
+function pintaMisProps() {
+  const el = $('misProps'); if (!el) return;
+  const pend = PROPS.filter(x => !x.enviada).length;
+  $('misPropsN').textContent = PROPS.length ? ` (${PROPS.length}${pend ? `, ${pend} sin enviar` : ''})` : '';
+  el.innerHTML = PROPS.length ? PROPS.slice().reverse().slice(0, 50).map(x => `<li>${esc(String(x.fecha).slice(0, 10))} · ${x.tipo === 'parking' ? '🅿 ' + esc(x.parking) + ' — ' + esc(x.nombre_actividad) : '🚐 ' + esc(x.nombre) + (x.correccion_de ? ' (corrección)' : '')} · <a href="#" onclick="map.setView([${x.la},${x.lo}],16);return false">ver</a> · ${x.enviada ? 'enviada' : '<b>pendiente de envío</b>'}</li>`).join('') : '<li>Aún no has enviado ninguna.</li>';
+}
+pintaMisProps();
