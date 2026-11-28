@@ -1,4 +1,4 @@
-// Mapa de actividades v1.49 (2026-11-28, E-096: buscador en una franja fina arriba —nada flotando sobre el mapa—, botón «Compartir» el mapa siempre visible y «Compartir» en cada ficha con enlace que abre esa ficha (?id=) o ese punto (?ll=)). Antes v1.48 (2026-11-28, E-079: PROPUESTAS de los usuarios sin datos personales —parking de barrancos, cuevas y ferratas (inicio y fin), sitio de pernocta nuevo o corrección de uno a < 100 m con tipo, pago, servicios y descripción—, recuadro de confirmación con resumen y minimapa, envío a un Google Form con campo trampa, límite por dispositivo y cola sin cobertura, «Mis propuestas»; E-073: tabla v44 con gratis/pago de 51 áreas AC de las tandas 1–12).
+// Mapa de actividades v1.50 (2026-11-28, E-097: parking DEMASIADO LEJOS de la actividad = descartado —límite en línea recta por tipo: barrancos, cuevas y refugios 15 km, ferratas 6 km— al marcarlo y al enviarlo; BIENVENIDA de una pantalla la primera vez, que luego se abre con «ⓘ» en la franja de arriba). Antes v1.49 (2026-11-28, E-096: buscador en una franja fina arriba —nada flotando sobre el mapa—, botón «Compartir» el mapa siempre visible y «Compartir» en cada ficha con enlace que abre esa ficha (?id=) o ese punto (?ll=)). Antes v1.48 (2026-11-28, E-079: PROPUESTAS de los usuarios sin datos personales —parking de barrancos, cuevas y ferratas (inicio y fin), sitio de pernocta nuevo o corrección de uno a < 100 m con tipo, pago, servicios y descripción—, recuadro de confirmación con resumen y minimapa, envío a un Google Form con campo trampa, límite por dispositivo y cola sin cobertura, «Mis propuestas»; E-073: tabla v44 con gratis/pago de 51 áreas AC de las tandas 1–12).
 // Mapa de actividades v1.47 (2026-11-28, E-092: 9 sitios de pernocta de Park4Night aprobados por Rafael en la tabla v43 —solo nombre, coordenadas y enlace; gratis/pago sin dato—; E-094: BUSCADOR GENERAL siempre visible encima del mapa —lupa arriba, también en «solo mapa»—, sin tildes ni mayúsculas y con erratas; sugerencias con icono y color del tipo; elegir = centrar y abrir la ficha; un pueblo = centrar allí y enseñar lo cercano; sin servicios externos).
 // Mapa de actividades v1.46 (2026-11-28, E-093: fallos hallados probando en el realme — 235 barrancos SIN GRADO no se veían nunca (casilla «Sin dato» en Compromiso); el contador ya no pone «0» de una capa apagada; el service worker ya no borra al actualizarse la copia sin cobertura guardada por «Guardar zona» y por las capas de agua/servicios).
 // Mapa de actividades v1.45 (2026-11-28, E-073: capas aparte de AGUA y de SERVICIOS furgo/AC de OpenStreetMap en capas.json —se descargan al encenderlas—; los 46 puntos de servicio salen de la pernocta (tabla v42); E-087: la ficha va en un panel propio y ya no se cierra sola; E-088: tres vistas —mapa y filtros, solo mapa, solo filtros—).
@@ -428,12 +428,22 @@ window.marcaParking = (id, k) => {
     if (!MARCANDO || MARCANDO.id !== id || MKPK.movido) return;
     const {latitude: la, longitude: lo, accuracy: ac} = pos.coords, d = Math.round(map.distance([la, lo], [p.la, p.lo]));
     MKPK.setLatLng([la, lo]); map.setView([la, lo], Math.max(map.getZoom(), 16));
-    avisoMarca(txt(`📍 Puesto en tu GPS (±${Math.round(ac)} m, a ${d >= 1000 ? (d / 1000).toFixed(1) + ' km' : d + ' m'} del punto${d > 5000 ? ' — ⚠ estás lejos' : ''}).`));
-  }, () => { if (MARCANDO && MARCANDO.id === id) avisoMarca(txt('Sin GPS: el marcador está en el parking actual o en el punto.')); }, {enableHighAccuracy: true, timeout: 20000, maximumAge: 0});
+    avisoMarca(txt(`📍 Puesto en tu GPS (±${Math.round(ac)} m, a ${d >= 1000 ? (d / 1000).toFixed(1) + ' km' : d + ' m'} del punto${d > pkMax(p) * 1000 ? ` — ⛔ más de ${pkMax(p)} km: así no se podrá guardar` : d > 5000 ? ' — ⚠ estás lejos' : ''}).`));
+  }, () => { if (MARCANDO && MARCANDO.id === id && !(MKPK && MKPK.movido)) avisoMarca(txt('Sin GPS: el marcador está en el parking actual o en el punto.')); }, {enableHighAccuracy: true, timeout: 20000, maximumAge: 0});
   else avisoMarca(txt('Sin GPS en este móvil.'));
   MKPK.on('dragstart', () => { MKPK.movido = true; });
 };
-window.confirmaPk = () => { if (!MARCANDO || !MKPK) return; const {id, k} = MARCANDO, ll = MKPK.getLatLng(); MARCANDO = null; quitaMk(); guardaPk(id, k, ll.lat, ll.lng, ''); };
+// E-097 (v1.50): límite de distancia (línea recta) entre el parking y el punto de la actividad. Elegido con los datos de la tabla v44:
+// barrancos máx. real 12,4 km (p99 4,4 km el superior y 7,8 km el inferior; el 21 km de Mortitx es un error de la fuente), cuevas 14,1 km
+// (inicios de track del Espeleoclub Viana), refugios 7,1 km, ferratas 1,5 km (aproximaciones cortas). Margen por encima de lo razonable.
+const PK_MAX_KM = {b: 15, c: 15, r: 15, f: 6};
+const pkMax = p => PK_MAX_KM[p.t] || 15;
+const pkLejos = (p, la, lo) => map.distance([la, lo], [p.la, p.lo]) > pkMax(p) * 1000;
+const NOMT = {b: 'barrancos', c: 'cuevas', r: 'refugios', f: 'ferratas'};
+const txtLejos = (p, la, lo) => `⛔ Demasiado lejos: ese parking está a ${(map.distance([la, lo], [p.la, p.lo]) / 1000).toFixed(1).replace('.', ',')} km de «${esc(p.n)}» y el máximo en ${NOMT[p.t] || 'esta actividad'} es ${pkMax(p)} km. Acércalo al sitio real.`;
+window.confirmaPk = () => { if (!MARCANDO || !MKPK) return; const {id, k} = MARCANDO, ll = MKPK.getLatLng(), p = P.find(x => x.id === id);
+  if (p && pkLejos(p, ll.lat, ll.lng)) { estado(txtLejos(p, ll.lat, ll.lng).replace(/<[^>]+>/g, '')); avisoMarca(txtLejos(p, ll.lat, ll.lng) + ' <button type="button" onclick="confirmaPk()">✔ Confirmar</button>'); return; }   // no se guarda: el marcador sigue para moverlo
+  MARCANDO = null; quitaMk(); guardaPk(id, k, ll.lat, ll.lng, ''); };
 $('marcaX').onclick = () => { MARCANDO = null; quitaMk(); DESHACER = null; avisoMarca(''); $('marcaX').textContent = 'Cancelar'; };
 // v1.25 (E-067): guardar con «↩ Deshacer».
 const nomPk = (p, k) => p.t === 'b' ? PK[k].t.toLowerCase() : p.t === 'f' ? (k === 's' ? 'parking de inicio' : 'parking de fin') : 'parking';
@@ -649,6 +659,7 @@ addEventListener('keydown', e => { if (e.key === 'Escape' && !$('propD').hidden)
 // --- 1) PARKING: tras marcarlo («📍 Marcar/Corregir», flujo de la v1.25), «📤 Enviar propuesta» ---
 window.proponParking = (id, k) => {
   const p = P.find(x => x.id === id), m = MIOS[id] && MIOS[id][k]; if (!p || !m) return estado('Primero marca el parking.');
+  if (pkLejos(p, m.la, m.lo)) { avisoMarca(txtLejos(p, m.la, m.lo) + ` <button type="button" onclick="marcaParking('${esc(id)}','${k}')">📍 Corregir</button>`); return; }   // E-097: tampoco se envía
   const antes = ORIG[id] && ORIG[id][k === 's' ? 'ps' : 'pi'];
   confirma({tipo: 'parking', id_actividad: id, tipo_actividad: ({b: 'barranco', f: 'ferrata', c: 'cueva', r: 'refugio'})[p.t] || p.t,
     nombre_actividad: p.n, k, parking: PKNOM(p, k), la: m.la, lo: m.lo, antes: antes ? {la: antes.la, lo: antes.lo, fuente: String(antes.fu || '').slice(0, 200)} : null,
@@ -727,7 +738,7 @@ function confirma(x, otro) {
 async function envia(x) {
   if (Date.now() - PROP_ABIERTA < PROP_MIN_MS) return estado('Revisa el resumen un momento antes de enviar.');
   if (enviadasHoy() >= PROP_LIM_DIA) return estado(`Máximo ${PROP_LIM_DIA} propuestas al día desde este dispositivo. Prueba mañana.`);
-  const r = Object.assign({v: 1, app: 'v1.49', fecha: new Date().toISOString(), disp: dispositivo()}, x);
+  const r = Object.assign({v: 1, app: 'v1.50', fecha: new Date().toISOString(), disp: dispositivo()}, x);
   if (PROPS.some(y => claveProp(y) === claveProp(r))) { cierraProp(); return estado('Esa propuesta ya estaba enviada o en cola.'); }
   PROPS.push(r); guardaProps(); cierraProp();
   await mandaPendientes();
@@ -757,6 +768,16 @@ function pintaMisProps() {
   el.innerHTML = PROPS.length ? PROPS.slice().reverse().slice(0, 50).map(x => `<li>${esc(String(x.fecha).slice(0, 10))} · ${x.tipo === 'parking' ? '🅿 ' + esc(x.parking) + ' — ' + esc(x.nombre_actividad) : '🚐 ' + esc(x.nombre) + (x.correccion_de ? ' (corrección)' : '')} · <a href="#" onclick="map.setView([${x.la},${x.lo}],16);return false">ver</a> · ${x.enviada ? 'enviada' : '<b>pendiente de envío</b>'}</li>`).join('') : '<li>Aún no has enviado ninguna.</li>';
 }
 pintaMisProps();
+
+// ---------- E-097 (v1.50): BIENVENIDA la primera vez (una pantalla, «Entendido»; luego desde «ⓘ» arriba) ----------
+const BIEN_KEY = 'e097-bienvenida-v1';
+function abreBienvenida() { $('bienD').hidden = false; setTimeout(() => $('bienOk').focus(), 30); }
+function cierraBienvenida() { $('bienD').hidden = true; try { localStorage.setItem(BIEN_KEY, '1'); } catch (e) {} }
+$('bienOk').onclick = cierraBienvenida;
+$('bienD').addEventListener('click', e => { if (e.target === $('bienD')) cierraBienvenida(); });
+addEventListener('keydown', e => { if (e.key === 'Escape' && !$('bienD').hidden) cierraBienvenida(); });
+$('btnInfo').onclick = abreBienvenida;
+(() => { let visto = false; try { visto = localStorage.getItem(BIEN_KEY) === '1'; } catch (e) {} if (!visto) abreBienvenida(); })();
 
 // ---------- E-096 (v1.49): COMPARTIR — el mapa (botón de la franja de arriba) y cada ficha ----------
 // Usa el compartir del sistema (Web Share API); si no hay, copia al portapapeles y avisa «Enlace copiado».
